@@ -24,7 +24,7 @@ Runs locally at http://localhost:3000.
 
 ## Run
 
-Requires Node 24 (`nvm use`).
+Requires Node 26 (`nvm install && nvm use`, which reads `.nvmrc`).
 
 ```bash
 npm install
