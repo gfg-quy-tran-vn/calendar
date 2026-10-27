@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { hideDomain } from '@/lib/names';
 import { removeAccount, setCalendarColor, setCalendarShown } from './api';
 import { ThemeToggle } from './ThemeToggle';
@@ -26,6 +26,17 @@ function ColorInput({ value, onCommit }: { value: string; onCommit: (color: stri
 }
 
 export function Sidebar({ accounts, onChange, children }: Props) {
+  // Groups start collapsed; this is just which ones the user has opened since loading the page.
+  const [expanded, setExpanded] = useState<ReadonlySet<number>>(new Set());
+
+  function toggleGroup(id: number) {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (!next.delete(id)) next.add(id);
+      return next;
+    });
+  }
+
   async function toggle(c: CalendarView) {
     await setCalendarShown(c.id, !c.shown);
     onChange();
@@ -52,7 +63,16 @@ export function Sidebar({ accounts, onChange, children }: Props) {
       {accounts.map((a) => (
         <section key={a.id} className="account">
           <div className="account-head">
-            <span title={a.email}>{hideDomain(a.email)}</span>
+            <button
+              className="account-toggle"
+              onClick={() => toggleGroup(a.id)}
+              aria-expanded={expanded.has(a.id)}
+              title={a.email}
+            >
+              <span className="chevron" aria-hidden="true">{expanded.has(a.id) ? '▾' : '▸'}</span>
+              <span className="account-name">{hideDomain(a.email)}</span>
+              <span className="muted account-count">{a.calendars.filter((c) => c.shown).length}/{a.calendars.length}</span>
+            </button>
             <button className="icon" title="Disconnect account" onClick={() => disconnect(a)}>✕</button>
           </div>
           {a.needsReauth && (
@@ -60,20 +80,22 @@ export function Sidebar({ accounts, onChange, children }: Props) {
               Login expired — Reconnect
             </a>
           )}
-          <ul>
-            {a.calendars.map((c) => (
-              <li key={c.id}>
-                <ColorInput value={c.colorOverride ?? c.color} onCommit={(color) => void recolor(c, color)} />
-                <label>
-                  <input type="checkbox" checked={c.shown} onChange={() => toggle(c)} />
-                  <span>{hideDomain(c.name)}</span>
-                </label>
-                {c.colorOverride && (
-                  <button className="icon" title="Use Google's color" onClick={() => void recolor(c, null)}>↺</button>
-                )}
-              </li>
-            ))}
-          </ul>
+          {expanded.has(a.id) && (
+            <ul>
+              {a.calendars.map((c) => (
+                <li key={c.id}>
+                  <ColorInput value={c.colorOverride ?? c.color} onCommit={(color) => void recolor(c, color)} />
+                  <label>
+                    <input type="checkbox" checked={c.shown} onChange={() => toggle(c)} />
+                    <span>{hideDomain(c.name)}</span>
+                  </label>
+                  {c.colorOverride && (
+                    <button className="icon" title="Use Google's color" onClick={() => void recolor(c, null)}>↺</button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       ))}
       <a className="add-account" href="/api/auth/start">+ Add Google account</a>

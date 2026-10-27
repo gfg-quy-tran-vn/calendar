@@ -7,6 +7,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin, { type EventResizeDoneArg } from '@fullcalendar/interaction';
 import type { DateSelectArg, DatesSetArg, EventApi, EventClickArg, EventDropArg, EventHoveringArg, EventInput, EventSourceFuncArg } from '@fullcalendar/core';
 import type { CalendarError, EventsResponse } from '@/lib/aggregate';
+import { withAlpha } from '@/lib/colors';
 import { addDays, localTimeZone } from '@/lib/dates';
 import { hideDomain } from '@/lib/names';
 import type { EventDraft, EventMeta } from '@/lib/events';
@@ -18,6 +19,8 @@ import { Sidebar, type AccountView } from './Sidebar';
 
 const HOUR = 3_600_000;
 const HOVER_DELAY_MS = 300;
+// Fill opacity of event boxes: low enough that overlapping events show through each other. The border stays solid.
+const EVENT_FILL_ALPHA = 0.75;
 
 function timesOf(e: EventApi): Pick<EventDraft, 'start' | 'end' | 'allDay' | 'timeZone'> {
   const end = e.endStr || (e.allDay ? addDays(e.startStr, 1) : new Date(e.start!.getTime() + HOUR).toISOString());
@@ -62,7 +65,7 @@ export function CalendarApp() {
           const data = (await res.json()) as EventsResponse;
           setWarnings(data.errors);
           if (data.errors.some((e) => e.kind === 'reauth')) void loadAccounts();
-          success(data.events);
+          success(data.events.map((e) => ({ ...e, backgroundColor: withAlpha(e.backgroundColor, EVENT_FILL_ALPHA) })));
         })
         .catch(failure);
     },
@@ -159,12 +162,15 @@ export function CalendarApp() {
             height="100%"
             nowIndicator
             displayEventTime={false}
+            eventMinHeight={22}
+            eventShortHeight={22}
             selectable
             selectMirror
             events={fetchEvents}
             select={onSelect}
             datesSet={onDatesSet}
             eventClick={onEventClick}
+            eventDidMount={(info) => info.el.style.setProperty('--event-solid', info.event.borderColor)}
             eventMouseEnter={onEventMouseEnter}
             eventMouseLeave={hideHover}
             eventDragStart={hideHover}

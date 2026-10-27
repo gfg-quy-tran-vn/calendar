@@ -21,7 +21,7 @@ export function EventHoverCard({ event, rect }: HoverState) {
   const position = below ? { top: rect.bottom + GAP } : { bottom: window.innerHeight - rect.top + GAP };
 
   return (
-    <div className="hover-card" style={{ left, width: WIDTH, maxHeight: MAX_HEIGHT, borderLeftColor: event.backgroundColor, ...position }}>
+    <div className="hover-card" style={{ left, width: WIDTH, maxHeight: MAX_HEIGHT, borderLeftColor: event.borderColor, ...position }}>
       <div className="hover-title">{event.title}</div>
       <div className="muted">{hideDomain(meta.calendarName)}</div>
       {meta.location && <div className="hover-row">📍 {meta.location}</div>}
