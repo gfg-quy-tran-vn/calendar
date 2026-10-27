@@ -140,6 +140,7 @@ export function CalendarApp() {
             headerToolbar={{ left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' }}
             height="100%"
             nowIndicator
+            displayEventTime={false}
             selectable
             selectMirror
             events={fetchEvents}
