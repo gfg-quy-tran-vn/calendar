@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { EventApi } from '@fullcalendar/core';
 import { addDays, fromLocalInput, localTimeZone, toLocalInput } from '@/lib/dates';
 import type { EventDraft, EventMeta } from '@/lib/events';
@@ -91,6 +91,15 @@ export function EventDialog({ state, calendars, onClose, onChanged }: Props) {
   const [form, setForm] = useState(() => initialForm(state, calendars));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Escape closes the dialog, like Close/Cancel. Not while saving, and not while an IME is composing text.
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape' && !e.isComposing && !busy) onClose();
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [busy, onClose]);
 
   const meta = state.mode === 'view' ? (state.event.extendedProps as EventMeta) : null;
   const recurring = Boolean(meta?.recurringEventId);
