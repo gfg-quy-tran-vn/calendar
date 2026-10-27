@@ -1587,8 +1587,17 @@ export function CalendarApp() {
   }, []);
 
   useEffect(() => {
-    void loadAccounts();
-  }, [loadAccounts]);
+    // setState only inside the promise callback, not synchronously in the effect body
+    let cancelled = false;
+    fetch('/api/accounts')
+      .then((res) => res.json())
+      .then((data: AccountView[]) => {
+        if (!cancelled) setAccounts(data);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const refetch = useCallback(() => calendarRef.current?.getApi().refetchEvents(), []);
 
@@ -2351,8 +2360,17 @@ export function CalendarApp() {
   }, []);
 
   useEffect(() => {
-    void loadAccounts();
-  }, [loadAccounts]);
+    // setState only inside the promise callback, not synchronously in the effect body
+    let cancelled = false;
+    fetch('/api/accounts')
+      .then((res) => res.json())
+      .then((data: AccountView[]) => {
+        if (!cancelled) setAccounts(data);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const refetch = useCallback(() => calendarRef.current?.getApi().refetchEvents(), []);
 
