@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import type { EventApi } from '@fullcalendar/core';
 import { addDays, fromLocalInput, localTimeZone, toLocalInput } from '@/lib/dates';
 import type { EventDraft, EventMeta } from '@/lib/events';
+import { defaultCalendarId } from '@/lib/calendars';
 import { hideDomain } from '@/lib/names';
 import { toDisplayHtml } from '@/lib/sanitize';
 import { createEvent, deleteEvent, updateEvent } from './api';
@@ -12,7 +13,7 @@ import { HtmlView } from './HtmlView';
 import { Icon } from './Icons';
 import { RichTextEditor } from './RichTextEditor';
 
-export type WritableCalendar = { id: number; label: string };
+export type WritableCalendar = { id: number; label: string; shown: boolean };
 export type DialogState =
   | { mode: 'create'; start: string; end: string; allDay: boolean }
   | { mode: 'view'; event: EventApi };
@@ -47,7 +48,7 @@ function toInputs(start: string, end: string | null, allDay: boolean): Pick<Form
 function initialForm(state: DialogState, calendars: WritableCalendar[]): Form {
   const base = { location: '', description: '', descriptionDirty: false, addMeet: false, scope: 'instance' as const };
   if (state.mode === 'create') {
-    return { ...base, calendarId: calendars[0]?.id ?? 0, title: '', allDay: state.allDay, ...toInputs(state.start, state.end, state.allDay) };
+    return { ...base, calendarId: defaultCalendarId(calendars), title: '', allDay: state.allDay, ...toInputs(state.start, state.end, state.allDay) };
   }
   const e = state.event;
   const meta = e.extendedProps as EventMeta;

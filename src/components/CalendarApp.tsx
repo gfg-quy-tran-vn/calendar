@@ -91,7 +91,8 @@ export function CalendarApp() {
               .map((c) => {
                 const name = hideDomain(c.name);
                 const owner = hideDomain(a.email);
-                return { id: c.id, label: name === owner ? name : `${name} — ${owner}` };
+                const label = name === owner ? name : `${name} — ${owner}`;
+                return { id: c.id, label: c.shown ? label : `${label} (hidden)`, shown: c.shown };
               }),
       ),
     [accounts],
