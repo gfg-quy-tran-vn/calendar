@@ -61,7 +61,6 @@ export function Sidebar({ accounts, onChange }: Props) {
                 <label>
                   <input type="checkbox" checked={c.shown} onChange={() => toggle(c)} />
                   <span>{c.name}</span>
-                  {!c.canWrite && <span className="muted"> · read-only</span>}
                 </label>
                 {c.colorOverride && (
                   <button className="icon" title="Use Google's color" onClick={() => void recolor(c, null)}>↺</button>
