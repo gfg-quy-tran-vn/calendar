@@ -11,7 +11,7 @@ import { addDays, localTimeZone } from '@/lib/dates';
 import type { EventDraft, EventMeta } from '@/lib/events';
 import { updateEvent } from './api';
 import { EventDialog, type DialogState, type WritableCalendar } from './EventDialog';
-import { Sidebar, type AccountView } from './Sidebar';
+import { Sidebar, accountName, type AccountView } from './Sidebar';
 
 const HOUR = 3_600_000;
 
@@ -65,7 +65,7 @@ export function CalendarApp() {
   const writable: WritableCalendar[] = useMemo(
     () =>
       accounts.flatMap((a) =>
-        a.needsReauth ? [] : a.calendars.filter((c) => c.canWrite).map((c) => ({ id: c.id, label: `${c.name} — ${a.email}` })),
+        a.needsReauth ? [] : a.calendars.filter((c) => c.canWrite).map((c) => ({ id: c.id, label: `${c.name} — ${accountName(a.email)}` })),
       ),
     [accounts],
   );

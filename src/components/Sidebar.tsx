@@ -11,6 +11,9 @@ export type AccountView = { id: number; email: string; needsReauth: boolean; cal
 
 type Props = { accounts: AccountView[]; onChange: () => void };
 
+/** Shown instead of the full address: `alex@example.com` → `alex`. */
+export const accountName = (email: string) => email.split('@')[0];
+
 // React's onChange fires on every drag inside the picker; the native `change` fires once, when the picker closes.
 function ColorInput({ value, onCommit }: { value: string; onCommit: (color: string) => void }) {
   const ref = useRef<HTMLInputElement>(null);
@@ -36,7 +39,7 @@ export function Sidebar({ accounts, onChange }: Props) {
   }
 
   async function disconnect(a: AccountView) {
-    if (!window.confirm(`Disconnect ${a.email}? Its events stay in Google; this only removes it from this app.`)) return;
+    if (!window.confirm(`Disconnect ${accountName(a.email)}? Its events stay in Google; this only removes it from this app.`)) return;
     await removeAccount(a.id);
     onChange();
   }
@@ -50,7 +53,7 @@ export function Sidebar({ accounts, onChange }: Props) {
       {accounts.map((a) => (
         <section key={a.id} className="account">
           <div className="account-head">
-            <span title={a.email}>{a.email}</span>
+            <span title={a.email}>{accountName(a.email)}</span>
             <button className="icon" title="Disconnect account" onClick={() => disconnect(a)}>✕</button>
           </div>
           {a.needsReauth && (
