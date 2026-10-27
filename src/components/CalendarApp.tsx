@@ -8,10 +8,11 @@ import interactionPlugin, { type EventResizeDoneArg } from '@fullcalendar/intera
 import type { DateSelectArg, EventApi, EventClickArg, EventDropArg, EventInput, EventSourceFuncArg } from '@fullcalendar/core';
 import type { CalendarError, EventsResponse } from '@/lib/aggregate';
 import { addDays, localTimeZone } from '@/lib/dates';
+import { hideDomain } from '@/lib/names';
 import type { EventDraft, EventMeta } from '@/lib/events';
 import { updateEvent } from './api';
 import { EventDialog, type DialogState, type WritableCalendar } from './EventDialog';
-import { Sidebar, accountName, type AccountView } from './Sidebar';
+import { Sidebar, type AccountView } from './Sidebar';
 
 const HOUR = 3_600_000;
 
@@ -65,7 +66,15 @@ export function CalendarApp() {
   const writable: WritableCalendar[] = useMemo(
     () =>
       accounts.flatMap((a) =>
-        a.needsReauth ? [] : a.calendars.filter((c) => c.canWrite).map((c) => ({ id: c.id, label: `${c.name} — ${accountName(a.email)}` })),
+        a.needsReauth
+          ? []
+          : a.calendars
+              .filter((c) => c.canWrite)
+              .map((c) => {
+                const name = hideDomain(c.name);
+                const owner = hideDomain(a.email);
+                return { id: c.id, label: name === owner ? name : `${name} — ${owner}` };
+              }),
       ),
     [accounts],
   );

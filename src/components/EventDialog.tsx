@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { EventApi } from '@fullcalendar/core';
 import { addDays, fromLocalInput, localTimeZone, toLocalInput } from '@/lib/dates';
 import type { EventDraft, EventMeta } from '@/lib/events';
+import { hideDomain } from '@/lib/names';
 import { toDisplayHtml } from '@/lib/sanitize';
 import { createEvent, deleteEvent, updateEvent } from './api';
 import { HtmlView } from './HtmlView';
@@ -188,7 +189,7 @@ export function EventDialog({ state, calendars, onClose, onChanged }: Props) {
           state.mode === 'view' && meta && (
             <>
               <h2>{state.event.title}</h2>
-              <p className="muted">{formatWhen(state.event)} · {meta.calendarName}</p>
+              <p className="muted">{formatWhen(state.event)} · {hideDomain(meta.calendarName)}</p>
               {meta.location && <p>📍 {meta.location}</p>}
               <HtmlView html={meta.description} />
               {meta.htmlLink && <a href={meta.htmlLink} target="_blank" rel="noopener noreferrer">Open in Google Calendar</a>}
