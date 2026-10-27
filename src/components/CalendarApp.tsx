@@ -14,12 +14,18 @@ import type { CalendarEvent, EventDraft, EventMeta } from '@/lib/events';
 import { updateEvent } from './api';
 import { EventDialog, type DialogState, type WritableCalendar } from './EventDialog';
 import { EventHoverCard, type HoverState } from './EventHoverCard';
+import { Icon } from './Icons';
 import { MiniCalendar } from './MiniCalendar';
 import { SearchBar } from './SearchBar';
 import { Sidebar, type AccountView } from './Sidebar';
 
 const HOUR = 3_600_000;
 const HOVER_DELAY_MS = 300;
+const VIEWS = [
+  { type: 'dayGridMonth', label: 'Month' },
+  { type: 'timeGridWeek', label: 'Week' },
+  { type: 'timeGridDay', label: 'Day' },
+] as const;
 // Fill opacity of event boxes: low enough that overlapping events show through each other. The border stays solid.
 const EVENT_FILL_ALPHA = 0.75;
 
@@ -34,7 +40,7 @@ export function CalendarApp() {
   const [warnings, setWarnings] = useState<CalendarError[]>([]);
   const [dialog, setDialog] = useState<DialogState | null>(null);
   const [hover, setHover] = useState<HoverState | null>(null);
-  const [period, setPeriod] = useState<{ start: Date; end: Date } | null>(null);
+  const [period, setPeriod] = useState<{ start: Date; end: Date; view: string } | null>(null);
   const hoverTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   // A search result chosen from another period: opened as soon as its events have loaded.
   const pendingOpen = useRef<{ id: string; timer: ReturnType<typeof setTimeout> } | null>(null);
@@ -115,7 +121,7 @@ export function CalendarApp() {
   }
 
   function onDatesSet(info: DatesSetArg) {
-    setPeriod({ start: info.view.currentStart, end: info.view.currentEnd });
+    setPeriod({ start: info.view.currentStart, end: info.view.currentEnd, view: info.view.type });
   }
 
   function hideHover() {
@@ -181,6 +187,21 @@ export function CalendarApp() {
       <main className="main">
         <div className="topbar">
           <SearchBar onPick={openFromSearch} />
+          <nav className="nav" aria-label="Calendar navigation">
+            <div className="seg">
+              <button onClick={() => calendarRef.current?.getApi().prev()} aria-label="Previous" title="Previous"><Icon name="left" /></button>
+              <button onClick={() => calendarRef.current?.getApi().next()} aria-label="Next" title="Next"><Icon name="right" /></button>
+            </div>
+            <button className="today-btn" onClick={() => calendarRef.current?.getApi().today()}>Today</button>
+            <div className="seg" role="group" aria-label="View">
+              {VIEWS.map((v) => (
+                <button key={v.type} className={period?.view === v.type ? 'active' : ''} aria-pressed={period?.view === v.type}
+                  onClick={() => calendarRef.current?.getApi().changeView(v.type)}>
+                  {v.label}
+                </button>
+              ))}
+            </div>
+          </nav>
         </div>
         {warnings.length > 0 && <div className="warning">Could not load: {warnings.map((w) => w.name).join(', ')}</div>}
         {accounts.length === 0 && <p className="muted">No accounts yet — use “+ Add Google account” to connect one.</p>}
@@ -189,7 +210,7 @@ export function CalendarApp() {
             ref={calendarRef}
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
             initialView="timeGridWeek"
-            headerToolbar={{ left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' }}
+            headerToolbar={false}
             height="100%"
             nowIndicator
             displayEventTime={false}

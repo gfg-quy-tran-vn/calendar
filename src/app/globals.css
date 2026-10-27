@@ -63,8 +63,15 @@ button.icon { border: none; padding: 0 4px; background: none; color: var(--muted
 
 .main { padding: 16px; display: flex; flex-direction: column; gap: 8px; min-width: 0; height: 100vh; }
 .calendar { flex: 1; min-height: 0; }
-.topbar { display: flex; }
-.search { position: relative; flex: 1; max-width: 560px; }
+.topbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.search { position: relative; flex: 1 1 220px; max-width: 520px; }
+.nav { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; background: var(--surface); }
+.seg button { display: inline-flex; align-items: center; justify-content: center; padding: 7px 12px; border: none; border-radius: 0; background: none; font-size: 14px; }
+.seg button + button { border-left: 1px solid var(--border); }
+.seg button:hover:not(.active) { background: var(--surface-2); }
+.seg button.active { background: var(--primary); color: #fff; font-weight: 600; }
+.today-btn { padding: 7px 14px; border-radius: 9px; font-size: 14px; }
 .search input { width: 100%; padding: 8px 34px; font: inherit; color: var(--fg); background: var(--surface-2); border: 1px solid var(--border-soft); border-radius: 10px; }
 .search input:focus { outline: 2px solid var(--primary); outline-offset: -1px; background: var(--bg); }
 .search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--muted); display: flex; pointer-events: none; }
