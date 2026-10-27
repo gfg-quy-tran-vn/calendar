@@ -32,4 +32,18 @@ npm run dev     # http://localhost:3000 — use "localhost", not 127.0.0.1, so t
 npm test
 ```
 
+### Production mode
+
+Faster and what you'd leave running day to day:
+
+```bash
+npm run build   # once, and again after any code change
+npm start       # http://localhost:3000, listens on localhost only
+```
+
+Stop `npm run dev` first (both use port 3000), or start with `PORT=3001 npm start` (then add `http://localhost:3001/api/auth/callback`
+as a redirect URI in Google Cloud and set `APP_URL=http://localhost:3001` in `.env.local`). It reads the same `.env.local` and `data/calendar.db`.
+
+> The app has no login of its own and stores your Google refresh tokens, so keep it bound to localhost. Don't expose it to a network.
+
 Data (accounts, refresh tokens, visible-calendar settings) lives in `data/calendar.db`. Delete the file to reset.

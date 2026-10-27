@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev -H localhost",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -H localhost",
     "lint": "eslint",
     "test": "TZ=UTC vitest run",
     "test:watch": "TZ=UTC vitest"
