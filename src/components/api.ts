@@ -23,9 +23,10 @@ export async function createEvent(calendarId: number, draft: EventDraft): Promis
 }
 
 export async function updateEvent(
-  calendarId: number, eventId: string, draft: Partial<EventDraft>, etag?: string,
+  calendarId: number, eventId: string, draft: Partial<EventDraft>, etag?: string, sendUpdates?: 'all' | 'none',
 ): Promise<CalendarEvent> {
-  return (await call(eventUrl(calendarId, eventId), { method: 'PATCH', body: JSON.stringify({ draft, etag }) })).json();
+  const qs = sendUpdates ? `?sendUpdates=${sendUpdates}` : '';
+  return (await call(eventUrl(calendarId, eventId) + qs, { method: 'PATCH', body: JSON.stringify({ draft, etag }) })).json();
 }
 
 export async function deleteEvent(calendarId: number, eventId: string): Promise<void> {

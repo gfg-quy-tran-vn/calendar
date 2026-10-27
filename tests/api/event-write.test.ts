@@ -58,6 +58,20 @@ describe('PATCH /api/calendars/:id/events/:eventId', () => {
     expect(await res.json()).toMatchObject({ id: `${calId}:ev1`, title: 'New', extendedProps: { etag: '"2"' } });
   });
 
+  it('passes sendUpdates through, and only valid values', async () => {
+    g.patch.mockResolvedValue({ data: { id: 'ev1', ...timed } });
+    const patch = (qs: string) =>
+      PATCH(new Request(`http://localhost/x${qs}`, { method: 'PATCH', body: JSON.stringify({ draft: { attendees: [{ email: 'a@example.com' }] } }) }), itemCtx());
+    expect((await patch('?sendUpdates=all')).status).toBe(200);
+    expect(g.patch.mock.calls[0][0]).toEqual({
+      calendarId: 'primary', eventId: 'ev1', sendUpdates: 'all', requestBody: { attendees: [{ email: 'a@example.com' }] },
+    });
+    expect((await patch('?sendUpdates=none')).status).toBe(200);
+    expect(g.patch.mock.calls[1][0].sendUpdates).toBe('none');
+    expect((await patch('?sendUpdates=everyone')).status).toBe(400);
+    expect(g.patch).toHaveBeenCalledTimes(2);
+  });
+
   it('omits If-Match when no etag is given (series edits)', async () => {
     g.patch.mockResolvedValue({ data: { id: 'ev1', ...timed } });
     await PATCH(jsonReq('PATCH', { draft: { title: 'x' } }), itemCtx());

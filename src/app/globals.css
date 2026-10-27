@@ -96,7 +96,20 @@ button.icon { border: none; padding: 0 4px; background: none; color: var(--muted
 .hover-card { position: fixed; z-index: 40; overflow: hidden; pointer-events: none; padding: 10px 12px; font-size: 13px; background: var(--surface); color: var(--fg); border: 1px solid var(--border); border-left: 4px solid; border-radius: 8px; box-shadow: 0 8px 24px rgb(0 0 0 / 0.25); display: flex; flex-direction: column; gap: 4px; }
 .hover-title { font-weight: 600; font-size: 14px; overflow-wrap: anywhere; }
 .hover-row { overflow-wrap: anywhere; }
-.hover-card .html-view { font-size: 13px; margin-top: 4px; }
+.hover-card .guests { display: flex; flex-direction: column; gap: 6px; }
+.guest-list { list-style: none; margin: 0; padding: 0; max-height: 180px; overflow-y: auto; font-size: 13px; }
+.guest { display: flex; align-items: baseline; gap: 8px; padding: 2px 0; }
+.guest-status { width: 14px; flex: none; text-align: center; font-weight: 700; color: var(--muted); }
+.guest-status.accepted { color: #16a34a; }
+.guest-status.declined { color: var(--danger); }
+.guest-name { overflow-wrap: anywhere; }
+.guest-tag { flex: none; padding: 0 6px; border: 1px solid var(--border); border-radius: 999px; font-size: 11px; color: var(--muted); }
+.guest-add { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+.guest-add-row { display: flex; gap: 8px; }
+.guest-add-row input { flex: 1; min-width: 0; padding: 6px 8px; font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--border); border-radius: 6px; }
+.dialog .guest-add label.inline { flex-direction: row; }
+
+.html-view { font-size: 13px; margin-top: 4px; }
 .hover-card .html-view p { margin: 0 0 6px; }
 
 .html-view { font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }

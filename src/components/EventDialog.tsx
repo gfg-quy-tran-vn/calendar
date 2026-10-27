@@ -7,6 +7,7 @@ import type { EventDraft, EventMeta } from '@/lib/events';
 import { hideDomain } from '@/lib/names';
 import { toDisplayHtml } from '@/lib/sanitize';
 import { createEvent, deleteEvent, updateEvent } from './api';
+import { GuestList } from './GuestList';
 import { HtmlView } from './HtmlView';
 import { RichTextEditor } from './RichTextEditor';
 
@@ -91,6 +92,7 @@ export function EventDialog({ state, calendars, onClose, onChanged }: Props) {
   const [form, setForm] = useState(() => initialForm(state, calendars));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [guests, setGuests] = useState(() => (state.mode === 'view' ? (state.event.extendedProps as EventMeta).attendees : []));
 
   // Escape closes the dialog, like Close/Cancel. Not while saving, and not while an IME is composing text.
   useEffect(() => {
@@ -148,6 +150,17 @@ export function EventDialog({ state, calendars, onClose, onChanged }: Props) {
     });
   }
 
+  async function addGuests(emails: string[], notify: boolean) {
+    if (state.mode !== 'view' || !meta) return;
+    const updated = await updateEvent(
+      meta.calendarId, meta.googleEventId, { attendees: [...guests, ...emails.map((email) => ({ email }))] }, meta.etag, notify ? 'all' : 'none',
+    );
+    // Keep the open event current, so a second change doesn't trip over the old etag.
+    state.event.setExtendedProp('etag', updated.extendedProps.etag);
+    state.event.setExtendedProp('attendees', updated.extendedProps.attendees);
+    setGuests(updated.extendedProps.attendees);
+  }
+
   function remove() {
     if (!meta) return;
     if (!window.confirm(`Delete "${form.title}"${series ? ' and all its occurrences' : ''}?`)) return;
@@ -201,6 +214,7 @@ export function EventDialog({ state, calendars, onClose, onChanged }: Props) {
               <p className="muted">{formatWhen(state.event)} · {hideDomain(meta.calendarName)}</p>
               {meta.location && <p>📍 {meta.location}</p>}
               <HtmlView html={meta.description} />
+              <GuestList guests={guests} canAdd={meta.canAddGuests} recurring={recurring} onAdd={addGuests} />
               {meta.htmlLink && <a href={meta.htmlLink} target="_blank" rel="noopener noreferrer">Open in Google Calendar</a>}
             </>
           )

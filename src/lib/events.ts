@@ -1,6 +1,17 @@
 import type { calendar_v3 } from 'googleapis';
 import type { CalendarRow } from './db';
 
+/** An event guest (Google calls them attendees). `self` and `organizer` are read-only facts from Google. */
+export type Guest = {
+  email: string;
+  displayName?: string;
+  responseStatus?: string; // needsAction | accepted | declined | tentative
+  organizer?: boolean;
+  self?: boolean;
+  optional?: boolean;
+  resource?: boolean; // a room or other resource
+};
+
 /** Stored in FullCalendar's `extendedProps`; everything the UI needs to call our API. */
 export type EventMeta = {
   calendarId: number;
@@ -13,6 +24,9 @@ export type EventMeta = {
   location: string;
   etag: string;
   htmlLink: string;
+  attendees: Guest[];
+  /** Whether the user may add guests here (the server still has the last word). */
+  canAddGuests: boolean;
 };
 
 /** Shape accepted by FullCalendar's `EventInput`. */
@@ -37,7 +51,29 @@ export type EventDraft = {
   description?: string;
   location?: string;
   timeZone?: string;
+  /** The complete guest list; Google replaces the existing list with it. */
+  attendees?: Guest[];
 };
+
+function toGuest(a: calendar_v3.Schema$EventAttendee): Guest | null {
+  if (!a.email) return null;
+  return {
+    email: a.email,
+    ...(a.displayName ? { displayName: a.displayName } : {}),
+    ...(a.responseStatus ? { responseStatus: a.responseStatus } : {}),
+    ...(a.organizer ? { organizer: true } : {}),
+    ...(a.self ? { self: true } : {}),
+    ...(a.optional ? { optional: true } : {}),
+    ...(a.resource ? { resource: true } : {}),
+  };
+}
+
+/** Organizers can always add guests; guests only if the organizer allows inviting or modifying (inviting is on by default). */
+function canAddGuests(ev: calendar_v3.Schema$Event, cal: CalendarRow): boolean {
+  if (!cal.canWrite || ev.status === 'cancelled') return false;
+  if (ev.eventType != null && ev.eventType !== 'default') return false; // birthdays, out of office, focus time, ...
+  return ev.organizer?.self === true || ev.guestsCanModify === true || ev.guestsCanInviteOthers !== false;
+}
 
 export function toCalendarEvent(ev: calendar_v3.Schema$Event, cal: CalendarRow): CalendarEvent {
   const allDay = Boolean(ev.start?.date);
@@ -62,6 +98,8 @@ export function toCalendarEvent(ev: calendar_v3.Schema$Event, cal: CalendarRow):
       location: ev.location ?? '',
       etag: ev.etag ?? '',
       htmlLink: ev.htmlLink ?? '',
+      attendees: (ev.attendees ?? []).flatMap((a) => toGuest(a) ?? []),
+      canAddGuests: canAddGuests(ev, cal),
     },
   };
 }
@@ -80,6 +118,16 @@ export function toGooglePatch(d: Partial<EventDraft>): calendar_v3.Schema$Event 
   if (d.start !== undefined && d.end !== undefined && d.allDay !== undefined) {
     body.start = toGoogleTime(d.start, d.allDay, d.timeZone);
     body.end = toGoogleTime(d.end, d.allDay, d.timeZone);
+  }
+  if (d.attendees !== undefined) {
+    // Only what Google lets us write; `self` and `organizer` are its own bookkeeping.
+    body.attendees = d.attendees.map(({ email, displayName, responseStatus, optional, resource }) => ({
+      email,
+      ...(displayName ? { displayName } : {}),
+      ...(responseStatus ? { responseStatus } : {}),
+      ...(optional ? { optional } : {}),
+      ...(resource ? { resource } : {}),
+    }));
   }
   return body;
 }

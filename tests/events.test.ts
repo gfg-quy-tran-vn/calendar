@@ -23,6 +23,7 @@ describe('toCalendarEvent', () => {
       extendedProps: {
         calendarId: 7, accountId: 2, calendarName: 'Work', canWrite: true, googleEventId: 'ev1',
         recurringEventId: 'series1', description: '<b>hi</b>', location: 'Room 1', etag: '"e1"', htmlLink: 'https://g/ev1',
+        attendees: [], canAddGuests: true,
       },
     });
   });
@@ -33,10 +34,66 @@ describe('toCalendarEvent', () => {
   });
 });
 
+describe('guests', () => {
+  const timed = { start: { dateTime: '2026-10-27T10:00:00Z' }, end: { dateTime: '2026-10-27T11:00:00Z' } };
+
+  it('maps attendees, keeping only the fields the UI uses', () => {
+    const e = toCalendarEvent(
+      {
+        id: 'g', ...timed,
+        attendees: [
+          { email: 'a@example.com', displayName: 'Alex', responseStatus: 'accepted', organizer: true, self: true },
+          { email: 'room@example.com', resource: true, responseStatus: 'accepted' },
+          { email: 'b@example.com', optional: true, responseStatus: 'needsAction', comment: 'ignored' },
+          { displayName: 'no email' },
+        ],
+      },
+      cal,
+    );
+    expect(e.extendedProps.attendees).toEqual([
+      { email: 'a@example.com', displayName: 'Alex', responseStatus: 'accepted', organizer: true, self: true },
+      { email: 'room@example.com', resource: true, responseStatus: 'accepted' },
+      { email: 'b@example.com', optional: true, responseStatus: 'needsAction' },
+    ]);
+  });
+
+  const can = (ev: object, c = cal) => toCalendarEvent({ id: 'g', ...timed, ...ev }, c).extendedProps.canAddGuests;
+
+  it('lets the organizer add guests', () => {
+    expect(can({ organizer: { self: true }, guestsCanInviteOthers: false })).toBe(true);
+  });
+
+  it('lets guests add guests unless the organizer turned that off (it is on by default)', () => {
+    expect(can({ organizer: { email: 'x@example.com' } })).toBe(true);
+    expect(can({ organizer: { email: 'x@example.com' }, guestsCanInviteOthers: false })).toBe(false);
+    expect(can({ organizer: { email: 'x@example.com' }, guestsCanInviteOthers: false, guestsCanModify: true })).toBe(true);
+  });
+
+  it('never allows it on read-only calendars, cancelled events or special event types', () => {
+    expect(can({ organizer: { self: true } }, { ...cal, canWrite: false })).toBe(false);
+    expect(can({ organizer: { self: true }, status: 'cancelled' })).toBe(false);
+    expect(can({ organizer: { self: true }, eventType: 'birthday' })).toBe(false);
+    expect(can({ organizer: { self: true }, eventType: 'default' })).toBe(true);
+  });
+});
+
 describe('calendar color', () => {
   it('uses the user override instead of Google\'s color', () => {
     const e = toCalendarEvent({ id: 'a', start: { date: '2026-10-27' }, end: { date: '2026-10-28' } }, { ...cal, colorOverride: '#00ff00' });
     expect(e).toMatchObject({ backgroundColor: '#00ff00', borderColor: '#00ff00' });
+  });
+});
+
+describe('toGooglePatch attendees', () => {
+  it('sends only the writable attendee fields, and only when given', () => {
+    expect(toGooglePatch({ title: 'x' })).not.toHaveProperty('attendees');
+    expect(
+      toGooglePatch({
+        attendees: [{ email: 'a@example.com', displayName: 'Alex', responseStatus: 'accepted', self: true, organizer: true }, { email: 'b@example.com' }],
+      }),
+    ).toEqual({
+      attendees: [{ email: 'a@example.com', displayName: 'Alex', responseStatus: 'accepted' }, { email: 'b@example.com' }],
+    });
   });
 });
 
