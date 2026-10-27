@@ -4,7 +4,7 @@ import type { Repo } from './db';
 export const SCOPES = ['openid', 'email', 'https://www.googleapis.com/auth/calendar'];
 
 export function appUrl(): string {
-  return process.env.APP_URL ?? 'http://localhost:3000';
+  return process.env.APP_URL ?? 'http://localhost:1984';
 }
 
 export function oauthClient() {

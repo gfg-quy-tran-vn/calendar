@@ -1,7 +1,7 @@
 # Personal Calendar
 
 All my Google calendars in one place: view, create, edit, drag and delete events, with HTML descriptions.
-Runs locally at http://localhost:3000.
+Runs locally at http://localhost:1984.
 
 ## One-time Google setup
 
@@ -11,7 +11,7 @@ Runs locally at http://localhost:3000.
    - **Branding:** app name and your email.
    - **Audience:** user type **External**. Add each Google account you'll connect under **Test users**.
    - **Data access:** add scopes `openid`, `.../auth/userinfo.email`, `.../auth/calendar`.
-   - **Clients → Create client:** type **Web application**. Authorized redirect URI: `http://localhost:3000/api/auth/callback`.
+   - **Clients → Create client:** type **Web application**. Authorized redirect URI: `http://localhost:1984/api/auth/callback`.
 4. `cp env.example .env.local` and paste the client ID and secret.
 
 > **Testing mode tokens expire after 7 days.** To avoid reconnecting weekly, go to **Audience → Publish app** (no verification needed for personal use).
@@ -28,7 +28,7 @@ Requires Node 26 (`nvm install && nvm use`, which reads `.nvmrc`).
 
 ```bash
 npm install
-npm run dev     # http://localhost:3000 — use "localhost", not 127.0.0.1, so the OAuth cookie matches
+npm run dev     # http://localhost:1984 — use "localhost", not 127.0.0.1, so the OAuth cookie matches
 npm test
 ```
 
@@ -38,11 +38,13 @@ Faster and what you'd leave running day to day:
 
 ```bash
 npm run build   # once, and again after any code change
-npm start       # http://localhost:3000, listens on localhost only
+npm start       # http://localhost:1984, listens on localhost only
 ```
 
-Stop `npm run dev` first (both use port 3000), or start with `PORT=3001 npm start` (then add `http://localhost:3001/api/auth/callback`
-as a redirect URI in Google Cloud and set `APP_URL=http://localhost:3001` in `.env.local`). It reads the same `.env.local` and `data/calendar.db`.
+Stop `npm run dev` first (both use port 1984). Both read the same `.env.local` and `data/calendar.db`.
+
+To use a different port, change `-p 1984` in the `dev` and `start` scripts in `package.json`, add `http://localhost:<port>/api/auth/callback`
+as a redirect URI in Google Cloud, and set `APP_URL=http://localhost:<port>` in `.env.local`.
 
 > The app has no login of its own and stores your Google refresh tokens, so keep it bound to localhost. Don't expose it to a network.
 

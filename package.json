@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -H localhost",
+    "dev": "next dev -H localhost -p 1984",
     "build": "next build",
-    "start": "next start -H localhost",
+    "start": "next start -H localhost -p 1984",
     "lint": "eslint",
     "test": "TZ=UTC vitest run",
     "test:watch": "TZ=UTC vitest",
