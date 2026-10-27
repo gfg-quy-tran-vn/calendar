@@ -12,7 +12,7 @@ export function GET() {
       needsReauth: a.needsReauth,
       calendars: calendars
         .filter((c) => c.accountId === a.id)
-        .map(({ id, name, color, shown, canWrite }) => ({ id, name, color, shown, canWrite })),
+        .map(({ id, name, color, colorOverride, shown, canWrite }) => ({ id, name, color, colorOverride, shown, canWrite })),
     })),
   );
 }

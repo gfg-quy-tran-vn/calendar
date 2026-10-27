@@ -36,6 +36,10 @@ export async function setCalendarShown(calendarId: number, shown: boolean): Prom
   await call(`/api/calendars/${calendarId}`, { method: 'PATCH', body: JSON.stringify({ shown }) });
 }
 
+export async function setCalendarColor(calendarId: number, color: string | null): Promise<void> {
+  await call(`/api/calendars/${calendarId}`, { method: 'PATCH', body: JSON.stringify({ color }) });
+}
+
 export async function removeAccount(accountId: number): Promise<void> {
   await call(`/api/accounts/${accountId}`, { method: 'DELETE' });
 }

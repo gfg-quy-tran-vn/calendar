@@ -14,7 +14,10 @@ button.icon { border: none; padding: 0 4px; color: #6b7280; }
 .account-head span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .account ul { list-style: none; padding: 0; margin: 6px 0; }
 .account li label { display: flex; gap: 8px; align-items: center; font-size: 14px; padding: 3px 0; cursor: pointer; }
-.swatch { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.account li { display: flex; align-items: center; gap: 8px; }
+.swatch { width: 16px; height: 16px; padding: 0; border: none; background: none; cursor: pointer; flex: none; }
+.swatch::-webkit-color-swatch-wrapper { padding: 0; }
+.swatch::-webkit-color-swatch { border: none; border-radius: 50%; }
 .reconnect { display: block; margin: 4px 0; color: #b91c1c; font-size: 13px; }
 .add-account { display: inline-block; margin-top: 8px; color: #2563eb; }
 

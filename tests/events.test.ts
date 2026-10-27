@@ -3,7 +3,7 @@ import type { CalendarRow } from '@/lib/db';
 import { toCalendarEvent, toGooglePatch } from '@/lib/events';
 
 const cal: CalendarRow = {
-  id: 7, accountId: 2, googleId: 'work@example.com', name: 'Work', color: '#ff0000', shown: true, canWrite: true,
+  id: 7, accountId: 2, googleId: 'work@example.com', name: 'Work', color: '#ff0000', colorOverride: null, shown: true, canWrite: true,
 };
 
 describe('toCalendarEvent', () => {
@@ -30,6 +30,13 @@ describe('toCalendarEvent', () => {
   it('maps an all-day event keeping Google\'s exclusive end date', () => {
     const e = toCalendarEvent({ id: 'a', start: { date: '2026-10-27' }, end: { date: '2026-10-29' } }, { ...cal, canWrite: false });
     expect(e).toMatchObject({ title: '(No title)', start: '2026-10-27', end: '2026-10-29', allDay: true, editable: false });
+  });
+});
+
+describe('calendar color', () => {
+  it('uses the user override instead of Google\'s color', () => {
+    const e = toCalendarEvent({ id: 'a', start: { date: '2026-10-27' }, end: { date: '2026-10-28' } }, { ...cal, colorOverride: '#00ff00' });
+    expect(e).toMatchObject({ backgroundColor: '#00ff00', borderColor: '#00ff00' });
   });
 });
 

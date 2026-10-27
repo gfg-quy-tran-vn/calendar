@@ -41,14 +41,15 @@ export type EventDraft = {
 
 export function toCalendarEvent(ev: calendar_v3.Schema$Event, cal: CalendarRow): CalendarEvent {
   const allDay = Boolean(ev.start?.date);
+  const color = cal.colorOverride ?? cal.color;
   return {
     id: `${cal.id}:${ev.id}`,
     title: ev.summary || '(No title)',
     start: (allDay ? ev.start?.date : ev.start?.dateTime) ?? '',
     end: (allDay ? ev.end?.date : ev.end?.dateTime) ?? undefined,
     allDay,
-    backgroundColor: cal.color,
-    borderColor: cal.color,
+    backgroundColor: color,
+    borderColor: color,
     editable: cal.canWrite,
     extendedProps: {
       calendarId: cal.id,

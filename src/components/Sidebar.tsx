@@ -1,15 +1,36 @@
 'use client';
 
-import { removeAccount, setCalendarShown } from './api';
+import { useEffect, useRef } from 'react';
+import { removeAccount, setCalendarColor, setCalendarShown } from './api';
 
-export type CalendarView = { id: number; name: string; color: string; shown: boolean; canWrite: boolean };
+export type CalendarView = {
+  id: number; name: string; color: string; colorOverride: string | null; shown: boolean; canWrite: boolean;
+};
 export type AccountView = { id: number; email: string; needsReauth: boolean; calendars: CalendarView[] };
 
 type Props = { accounts: AccountView[]; onChange: () => void };
 
+// React's onChange fires on every drag inside the picker; the native `change` fires once, when the picker closes.
+function ColorInput({ value, onCommit }: { value: string; onCommit: (color: string) => void }) {
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const handler = () => onCommit(el.value);
+    el.addEventListener('change', handler);
+    return () => el.removeEventListener('change', handler);
+  }, [onCommit]);
+  return <input ref={ref} key={value} type="color" className="swatch" defaultValue={value} title="Change color" />;
+}
+
 export function Sidebar({ accounts, onChange }: Props) {
   async function toggle(c: CalendarView) {
     await setCalendarShown(c.id, !c.shown);
+    onChange();
+  }
+
+  async function recolor(c: CalendarView, color: string | null) {
+    await setCalendarColor(c.id, color);
     onChange();
   }
 
@@ -36,12 +57,15 @@ export function Sidebar({ accounts, onChange }: Props) {
           <ul>
             {a.calendars.map((c) => (
               <li key={c.id}>
+                <ColorInput value={c.colorOverride ?? c.color} onCommit={(color) => void recolor(c, color)} />
                 <label>
                   <input type="checkbox" checked={c.shown} onChange={() => toggle(c)} />
-                  <span className="swatch" style={{ background: c.color }} />
                   <span>{c.name}</span>
                   {!c.canWrite && <span className="muted"> · read-only</span>}
                 </label>
+                {c.colorOverride && (
+                  <button className="icon" title="Use Google's color" onClick={() => void recolor(c, null)}>↺</button>
+                )}
               </li>
             ))}
           </ul>

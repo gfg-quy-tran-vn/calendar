@@ -3,7 +3,7 @@ import type { CalendarRow } from '@/lib/db';
 import { fetchRange } from '@/lib/aggregate';
 
 const cal = (id: number, accountId: number, name: string): CalendarRow => ({
-  id, accountId, googleId: `g${id}`, name, color: '#000', shown: true, canWrite: true,
+  id, accountId, googleId: `g${id}`, name, color: '#000', colorOverride: null, shown: true, canWrite: true,
 });
 const range = { timeMin: '2026-10-26T00:00:00Z', timeMax: '2026-11-02T00:00:00Z' };
 const timed = (id: string, status = 'confirmed') => ({

@@ -4,7 +4,8 @@ import path from 'node:path';
 
 export type Account = { id: number; email: string; refreshToken: string; needsReauth: boolean };
 export type CalendarRow = {
-  id: number; accountId: number; googleId: string; name: string; color: string; shown: boolean; canWrite: boolean;
+  id: number; accountId: number; googleId: string; name: string; color: string; colorOverride: string | null;
+  shown: boolean; canWrite: boolean;
 };
 export type CalendarInput = Pick<CalendarRow, 'googleId' | 'name' | 'color' | 'canWrite'>;
 
@@ -21,6 +22,7 @@ CREATE TABLE IF NOT EXISTS calendars (
   google_id TEXT NOT NULL,
   name TEXT NOT NULL,
   color TEXT NOT NULL,
+  color_override TEXT,
   shown INTEGER NOT NULL DEFAULT 1,
   can_write INTEGER NOT NULL DEFAULT 0,
   UNIQUE(account_id, google_id)
@@ -29,7 +31,8 @@ CREATE TABLE IF NOT EXISTS calendars (
 
 type AccountRecord = { id: number; email: string; refresh_token: string; needs_reauth: number };
 type CalendarRecord = {
-  id: number; account_id: number; google_id: string; name: string; color: string; shown: number; can_write: number;
+  id: number; account_id: number; google_id: string; name: string; color: string; color_override: string | null;
+  shown: number; can_write: number;
 };
 
 const toAccount = (r: AccountRecord): Account => ({
@@ -37,7 +40,7 @@ const toAccount = (r: AccountRecord): Account => ({
 });
 const toCalendar = (r: CalendarRecord): CalendarRow => ({
   id: r.id, accountId: r.account_id, googleId: r.google_id, name: r.name, color: r.color,
-  shown: r.shown === 1, canWrite: r.can_write === 1,
+  colorOverride: r.color_override, shown: r.shown === 1, canWrite: r.can_write === 1,
 });
 
 export function openDb(file: string): Database.Database {
@@ -46,6 +49,9 @@ export function openDb(file: string): Database.Database {
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
   db.exec(SCHEMA);
+  // Databases created before the colour override existed lack the column (CREATE TABLE IF NOT EXISTS won't add it).
+  const columns = db.prepare('PRAGMA table_info(calendars)').all() as { name: string }[];
+  if (!columns.some((c) => c.name === 'color_override')) db.exec('ALTER TABLE calendars ADD COLUMN color_override TEXT');
   return db;
 }
 
@@ -87,6 +93,9 @@ export function createRepo(db: Database.Database) {
     },
     listCalendars(): CalendarRow[] {
       return (db.prepare('SELECT * FROM calendars ORDER BY account_id, name').all() as CalendarRecord[]).map(toCalendar);
+    },
+    setColorOverride(id: number, color: string | null): void {
+      db.prepare('UPDATE calendars SET color_override = ? WHERE id = ?').run(color, id);
     },
     setShown(id: number, shown: boolean): void {
       db.prepare('UPDATE calendars SET shown = ? WHERE id = ?').run(shown ? 1 : 0, id);
