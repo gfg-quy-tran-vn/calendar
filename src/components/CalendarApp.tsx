@@ -5,16 +5,18 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin, { type EventResizeDoneArg } from '@fullcalendar/interaction';
-import type { DateSelectArg, EventApi, EventClickArg, EventDropArg, EventInput, EventSourceFuncArg } from '@fullcalendar/core';
+import type { DateSelectArg, EventApi, EventClickArg, EventDropArg, EventHoveringArg, EventInput, EventSourceFuncArg } from '@fullcalendar/core';
 import type { CalendarError, EventsResponse } from '@/lib/aggregate';
 import { addDays, localTimeZone } from '@/lib/dates';
 import { hideDomain } from '@/lib/names';
 import type { EventDraft, EventMeta } from '@/lib/events';
 import { updateEvent } from './api';
 import { EventDialog, type DialogState, type WritableCalendar } from './EventDialog';
+import { EventHoverCard, type HoverState } from './EventHoverCard';
 import { Sidebar, type AccountView } from './Sidebar';
 
 const HOUR = 3_600_000;
+const HOVER_DELAY_MS = 300;
 
 function timesOf(e: EventApi): Pick<EventDraft, 'start' | 'end' | 'allDay' | 'timeZone'> {
   const end = e.endStr || (e.allDay ? addDays(e.startStr, 1) : new Date(e.start!.getTime() + HOUR).toISOString());
@@ -26,6 +28,8 @@ export function CalendarApp() {
   const [accounts, setAccounts] = useState<AccountView[]>([]);
   const [warnings, setWarnings] = useState<CalendarError[]>([]);
   const [dialog, setDialog] = useState<DialogState | null>(null);
+  const [hover, setHover] = useState<HoverState | null>(null);
+  const hoverTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const loadAccounts = useCallback(async () => {
     const res = await fetch('/api/accounts');
@@ -99,8 +103,20 @@ export function CalendarApp() {
     setDialog({ mode: 'create', start: info.startStr, end: info.endStr, allDay: info.allDay });
   }
 
+  function hideHover() {
+    clearTimeout(hoverTimer.current);
+    setHover(null);
+  }
+
+  function onEventMouseEnter(info: EventHoveringArg) {
+    clearTimeout(hoverTimer.current);
+    const { event, el } = info;
+    hoverTimer.current = setTimeout(() => setHover({ event, rect: el.getBoundingClientRect() }), HOVER_DELAY_MS);
+  }
+
   function onEventClick(info: EventClickArg) {
     info.jsEvent.preventDefault();
+    hideHover();
     setDialog({ mode: 'view', event: info.event });
   }
 
@@ -129,11 +145,16 @@ export function CalendarApp() {
             events={fetchEvents}
             select={onSelect}
             eventClick={onEventClick}
+            eventMouseEnter={onEventMouseEnter}
+            eventMouseLeave={hideHover}
+            eventDragStart={hideHover}
+            eventResizeStart={hideHover}
             eventDrop={onTimeChange}
             eventResize={onTimeChange}
           />
         </div>
       </main>
+      {hover && !dialog && <EventHoverCard {...hover} />}
       {dialog && <EventDialog state={dialog} calendars={writable} onClose={() => setDialog(null)} onChanged={refetch} />}
     </div>
   );
