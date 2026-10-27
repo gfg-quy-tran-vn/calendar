@@ -9,7 +9,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const draft = (await req.json()) as EventDraft;
 
   try {
-    const res = await client.events.insert({ calendarId: cal.googleId, requestBody: toGooglePatch(draft) });
+    const res = await client.events.insert({
+      calendarId: cal.googleId, requestBody: toGooglePatch(draft),
+      ...(draft.addMeet ? { conferenceDataVersion: 1 } : {}),
+    });
     return Response.json(toCalendarEvent(res.data, cal), { status: 201 });
   } catch (err) {
     return googleErrorResponse(err, repo, cal.accountId);

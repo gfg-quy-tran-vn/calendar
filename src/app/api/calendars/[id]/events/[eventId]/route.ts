@@ -23,6 +23,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
       {
         calendarId: cal.googleId, eventId, requestBody: toGooglePatch(draft),
         ...(sendUpdates ? { sendUpdates: sendUpdates as SendUpdates } : {}),
+        ...(draft.addMeet ? { conferenceDataVersion: 1 } : {}),
       },
       etag ? { headers: { 'If-Match': etag } } : undefined,
     );

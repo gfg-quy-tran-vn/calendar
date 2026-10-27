@@ -119,6 +119,8 @@ button.danger.ghost { color: var(--danger); margin-left: -12px; }
 .dlg-sub { display: block; font-size: 13px; overflow-wrap: anywhere; }
 .dlg-join { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .dlg-join-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.meet-row { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13px; }
+.meet-toggle { font-size: 14px; }
 .join-btn { display: inline-flex; align-items: center; padding: 6px 14px; border-radius: 8px; background: var(--primary); color: #fff; font-size: 14px; font-weight: 600; text-decoration: none; }
 .join-btn:hover { filter: brightness(1.1); }
 .copy-link { padding: 5px 10px; font-size: 13px; }

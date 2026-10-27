@@ -17,7 +17,8 @@ rich-text (HTML) descriptions, and see and add guests. Runs on your own computer
 - **Search.** Press `/` (or Cmd/Ctrl+K) to search the calendars you have ticked, from a year back to a year ahead. It matches
   titles, descriptions, locations and guests. Upcoming events come first. Pick a result to jump to its date and open it.
 - **Video calls.** Events with a Google Meet (or Zoom and similar) link show a **Join** button and a **Copy link** button in
-  the details. Only `https` links are ever made clickable.
+  the details. Only `https` links are ever made clickable. When creating or editing an event, tick **Add Google Meet video conferencing** to attach a new Meet
+  call (removing one is not supported).
 - **Hover preview** of the full title, location and description. Esc closes dialogs.
 - **Day and night themes.** Follows your system setting, and remembers your choice.
 

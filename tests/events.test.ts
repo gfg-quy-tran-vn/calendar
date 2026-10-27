@@ -123,6 +123,20 @@ describe('calendar color', () => {
   });
 });
 
+describe('toGooglePatch addMeet', () => {
+  it('asks Google to create a Meet call, with a fresh request id each time', () => {
+    const a = toGooglePatch({ addMeet: true });
+    const b = toGooglePatch({ addMeet: true });
+    expect(a).toEqual({ conferenceData: { createRequest: { requestId: expect.any(String), conferenceSolutionKey: { type: 'hangoutsMeet' } } } });
+    expect(a.conferenceData?.createRequest?.requestId).not.toBe(b.conferenceData?.createRequest?.requestId);
+  });
+
+  it('leaves conference data alone otherwise', () => {
+    expect(toGooglePatch({ title: 'x' })).not.toHaveProperty('conferenceData');
+    expect(toGooglePatch({ addMeet: false })).not.toHaveProperty('conferenceData');
+  });
+});
+
 describe('toGooglePatch attendees', () => {
   it('sends only the writable attendee fields, and only when given', () => {
     expect(toGooglePatch({ title: 'x' })).not.toHaveProperty('attendees');

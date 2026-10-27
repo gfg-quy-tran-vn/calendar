@@ -28,6 +28,7 @@ type Form = {
   location: string;
   description: string;
   descriptionDirty: boolean;
+  addMeet: boolean;
   scope: 'instance' | 'series';
 };
 
@@ -44,7 +45,7 @@ function toInputs(start: string, end: string | null, allDay: boolean): Pick<Form
 }
 
 function initialForm(state: DialogState, calendars: WritableCalendar[]): Form {
-  const base = { location: '', description: '', descriptionDirty: false, scope: 'instance' as const };
+  const base = { location: '', description: '', descriptionDirty: false, addMeet: false, scope: 'instance' as const };
   if (state.mode === 'create') {
     return { ...base, calendarId: calendars[0]?.id ?? 0, title: '', allDay: state.allDay, ...toInputs(state.start, state.end, state.allDay) };
   }
@@ -72,6 +73,7 @@ function toDraft(f: Form, includeDescription: boolean): EventDraft {
     timeZone: localTimeZone(),
     location: f.location,
     ...(includeDescription ? { description: f.description } : {}),
+    ...(f.addMeet ? { addMeet: true } : {}),
   };
 }
 
@@ -227,6 +229,14 @@ export function EventDialog({ state, calendars, onClose, onChanged }: Props) {
               Location
               <input type="text" value={form.location} onChange={(e) => set('location', e.target.value)} />
             </label>
+            {meta?.conference ? (
+              <p className="meet-row muted"><Icon name="video" size={15} /> {meta.conference.name} is on for this event</p>
+            ) : (
+              <label className="inline meet-toggle">
+                <input type="checkbox" checked={form.addMeet} disabled={series} onChange={(e) => set('addMeet', e.target.checked)} />
+                <Icon name="video" size={15} /> Add Google Meet video conferencing
+              </label>
+            )}
             <div>
               <div className="field-label">Description</div>
               <RichTextEditor value={form.description}

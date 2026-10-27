@@ -46,6 +46,32 @@ describe('POST /api/calendars/:id/events', () => {
   });
 });
 
+describe('adding Google Meet', () => {
+  const meetBody = { conferenceData: { createRequest: { requestId: expect.any(String), conferenceSolutionKey: { type: 'hangoutsMeet' } } } };
+
+  it('creates the call when inserting, and says it understands conference data', async () => {
+    g.insert.mockResolvedValue({ data: { id: 'new', summary: 'Sync', hangoutLink: 'https://meet.google.com/abc-defg-hij', ...timed } });
+    const draft = { title: 'Sync', start: '2026-10-27T10:00:00.000Z', end: '2026-10-27T11:00:00.000Z', allDay: false, addMeet: true };
+    const res = await POST(jsonReq('POST', draft), { params: Promise.resolve({ id: String(calId) }) });
+    expect(res.status).toBe(201);
+    expect(g.insert).toHaveBeenCalledWith({ calendarId: 'primary', conferenceDataVersion: 1, requestBody: expect.objectContaining(meetBody) });
+    expect((await res.json()).extendedProps.conference).toEqual({ url: 'https://meet.google.com/abc-defg-hij', name: 'Google Meet' });
+  });
+
+  it('does not touch conference data when Meet is not requested', async () => {
+    g.insert.mockResolvedValue({ data: { id: 'new', ...timed } });
+    await POST(jsonReq('POST', { title: 'Sync', start: '2026-10-27T10:00:00.000Z', end: '2026-10-27T11:00:00.000Z', allDay: false }), { params: Promise.resolve({ id: String(calId) }) });
+    expect(g.insert.mock.calls[0][0]).not.toHaveProperty('conferenceDataVersion');
+    expect(g.insert.mock.calls[0][0].requestBody).not.toHaveProperty('conferenceData');
+  });
+
+  it('adds a call to an existing event with a patch', async () => {
+    g.patch.mockResolvedValue({ data: { id: 'ev1', ...timed } });
+    await PATCH(jsonReq('PATCH', { draft: { addMeet: true }, etag: '"1"' }), itemCtx());
+    expect(g.patch.mock.calls[0][0]).toEqual({ calendarId: 'primary', eventId: 'ev1', conferenceDataVersion: 1, requestBody: meetBody });
+  });
+});
+
 describe('PATCH /api/calendars/:id/events/:eventId', () => {
   it('patches with If-Match and returns the updated event', async () => {
     g.patch.mockResolvedValue({ data: { id: 'ev1', summary: 'New', etag: '"2"', ...timed } });

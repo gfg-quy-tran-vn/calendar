@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type { calendar_v3 } from 'googleapis';
 import type { CalendarRow } from './db';
 
@@ -57,6 +58,8 @@ export type EventDraft = {
   timeZone?: string;
   /** The complete guest list; Google replaces the existing list with it. */
   attendees?: Guest[];
+  /** Ask Google to attach a new Meet call. (Removing one is not supported here.) */
+  addMeet?: boolean;
 };
 
 function toGuest(a: calendar_v3.Schema$EventAttendee): Guest | null {
@@ -140,6 +143,10 @@ export function toGooglePatch(d: Partial<EventDraft>): calendar_v3.Schema$Event 
   if (d.start !== undefined && d.end !== undefined && d.allDay !== undefined) {
     body.start = toGoogleTime(d.start, d.allDay, d.timeZone);
     body.end = toGoogleTime(d.end, d.allDay, d.timeZone);
+  }
+  if (d.addMeet) {
+    // Google creates the call asynchronously; each request needs its own id. The request must also carry conferenceDataVersion=1.
+    body.conferenceData = { createRequest: { requestId: randomUUID(), conferenceSolutionKey: { type: 'hangoutsMeet' } } };
   }
   if (d.attendees !== undefined) {
     // Only what Google lets us write; `self` and `organizer` are its own bookkeeping.
