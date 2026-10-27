@@ -116,7 +116,12 @@ button.danger.ghost { color: var(--danger); margin-left: -12px; }
 .dlg-meta { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; font-size: 14px; }
 .dlg-meta li { display: flex; align-items: flex-start; gap: 12px; }
 .dlg-meta .icon-svg { margin-top: 2px; color: var(--muted); }
-.dlg-sub { display: block; font-size: 13px; }
+.dlg-sub { display: block; font-size: 13px; overflow-wrap: anywhere; }
+.dlg-join { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.dlg-join-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.join-btn { display: inline-flex; align-items: center; padding: 6px 14px; border-radius: 8px; background: var(--primary); color: #fff; font-size: 14px; font-weight: 600; text-decoration: none; }
+.join-btn:hover { filter: brightness(1.1); }
+.copy-link { padding: 5px 10px; font-size: 13px; }
 .dlg-cal { display: inline-flex; align-items: center; gap: 8px; }
 .cal-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--event-color); }
 .dlg-section { border-top: 1px solid var(--border); padding-top: 14px; }

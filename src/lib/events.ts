@@ -12,6 +12,9 @@ export type Guest = {
   resource?: boolean; // a room or other resource
 };
 
+/** A video call attached to an event (Google Meet, Zoom, ...). */
+export type Conference = { url: string; name: string };
+
 /** Stored in FullCalendar's `extendedProps`; everything the UI needs to call our API. */
 export type EventMeta = {
   calendarId: number;
@@ -27,6 +30,7 @@ export type EventMeta = {
   attendees: Guest[];
   /** Whether the user may add guests here (the server still has the last word). */
   canAddGuests: boolean;
+  conference: Conference | null;
 };
 
 /** Shape accepted by FullCalendar's `EventInput`. */
@@ -68,6 +72,23 @@ function toGuest(a: calendar_v3.Schema$EventAttendee): Guest | null {
   };
 }
 
+const isHttps = (value: string) => {
+  try {
+    return new URL(value).protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+
+/** The video call, from the video entry point or Meet's `hangoutLink`. Only https links are kept, since they become clickable. */
+function toConference(ev: calendar_v3.Schema$Event): Conference | null {
+  const video = ev.conferenceData?.entryPoints?.find((p) => p.entryPointType === 'video' && p.uri);
+  const url = video?.uri ?? ev.hangoutLink;
+  if (!url || !isHttps(url)) return null;
+  const isMeet = new URL(url).hostname === 'meet.google.com';
+  return { url, name: isMeet ? 'Google Meet' : ev.conferenceData?.conferenceSolution?.name || 'Video call' };
+}
+
 /** Organizers can always add guests; guests only if the organizer allows inviting or modifying (inviting is on by default). */
 function canAddGuests(ev: calendar_v3.Schema$Event, cal: CalendarRow): boolean {
   if (!cal.canWrite || ev.status === 'cancelled') return false;
@@ -100,6 +121,7 @@ export function toCalendarEvent(ev: calendar_v3.Schema$Event, cal: CalendarRow):
       htmlLink: ev.htmlLink ?? '',
       attendees: (ev.attendees ?? []).flatMap((a) => toGuest(a) ?? []),
       canAddGuests: canAddGuests(ev, cal),
+      conference: toConference(ev),
     },
   };
 }

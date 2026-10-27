@@ -103,6 +103,7 @@ export function EventDialog({ state, calendars, onClose, onChanged }: Props) {
   const [form, setForm] = useState(() => initialForm(state, calendars));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const [guests, setGuests] = useState(() => (state.mode === 'view' ? (state.event.extendedProps as EventMeta).attendees : []));
 
   // Escape closes the dialog, like Close/Cancel. Not while saving, and not while an IME is composing text.
@@ -159,6 +160,16 @@ export function EventDialog({ state, calendars, onClose, onChanged }: Props) {
       }
       return updateEvent(meta.calendarId, meta.googleEventId, draft, meta.etag);
     });
+  }
+
+  async function copyLink(url: string) {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      setError('Could not copy the link.');
+    }
   }
 
   async function addGuests(emails: string[], notify: boolean) {
@@ -234,6 +245,20 @@ export function EventDialog({ state, calendars, onClose, onChanged }: Props) {
                   <Icon name="clock" />
                   <span>{when?.primary}{when?.secondary && <span className="muted dlg-sub">{when.secondary}</span>}</span>
                 </li>
+                {meta.conference && (
+                  <li>
+                    <Icon name="video" />
+                    <span className="dlg-join">
+                      <span className="dlg-join-row">
+                        <a className="join-btn" href={meta.conference.url} target="_blank" rel="noopener noreferrer">
+                          {meta.conference.name === 'Video call' ? 'Join video call' : `Join with ${meta.conference.name}`}
+                        </a>
+                        <button className="ghost copy-link" onClick={() => void copyLink(meta.conference!.url)}>{copied ? 'Copied ✓' : 'Copy link'}</button>
+                      </span>
+                      <span className="muted dlg-sub">{meta.conference.url.replace(/^https:\/\//, '')}</span>
+                    </span>
+                  </li>
+                )}
                 {recurring && <li><Icon name="repeat" /><span className="muted">Recurring event</span></li>}
                 {meta.location && <li><Icon name="pin" /><span>{meta.location}</span></li>}
                 <li>

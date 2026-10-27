@@ -25,6 +25,7 @@ export function EventHoverCard({ event, rect }: HoverState) {
       <div className="hover-title">{event.title}</div>
       <div className="muted">{hideDomain(meta.calendarName)}</div>
       {meta.location && <div className="hover-row">📍 {meta.location}</div>}
+      {meta.conference && <div className="hover-row">🎥 {meta.conference.name}</div>}
       {meta.description.trim() && <HtmlView html={meta.description} />}
     </div>
   );

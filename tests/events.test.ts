@@ -23,7 +23,7 @@ describe('toCalendarEvent', () => {
       extendedProps: {
         calendarId: 7, accountId: 2, calendarName: 'Work', canWrite: true, googleEventId: 'ev1',
         recurringEventId: 'series1', description: '<b>hi</b>', location: 'Room 1', etag: '"e1"', htmlLink: 'https://g/ev1',
-        attendees: [], canAddGuests: true,
+        attendees: [], canAddGuests: true, conference: null,
       },
     });
   });
@@ -31,6 +31,45 @@ describe('toCalendarEvent', () => {
   it('maps an all-day event keeping Google\'s exclusive end date', () => {
     const e = toCalendarEvent({ id: 'a', start: { date: '2026-10-27' }, end: { date: '2026-10-29' } }, { ...cal, canWrite: false });
     expect(e).toMatchObject({ title: '(No title)', start: '2026-10-27', end: '2026-10-29', allDay: true, editable: false });
+  });
+});
+
+describe('video calls', () => {
+  const timed = { start: { dateTime: '2026-10-27T10:00:00Z' }, end: { dateTime: '2026-10-27T11:00:00Z' } };
+  const conf = (ev: object) => toCalendarEvent({ id: 'v', ...timed, ...ev }, cal).extendedProps.conference;
+
+  it('has no conference when the event has none', () => {
+    expect(conf({})).toBeNull();
+  });
+
+  it('uses the Google Meet link from hangoutLink', () => {
+    expect(conf({ hangoutLink: 'https://meet.google.com/abc-defg-hij' })).toEqual({ url: 'https://meet.google.com/abc-defg-hij', name: 'Google Meet' });
+  });
+
+  it('prefers the video entry point and names the provider', () => {
+    const e = conf({
+      hangoutLink: 'https://meet.google.com/abc-defg-hij',
+      conferenceData: {
+        conferenceSolution: { name: 'Zoom Meeting' },
+        entryPoints: [
+          { entryPointType: 'phone', uri: 'tel:+15551234567' },
+          { entryPointType: 'video', uri: 'https://zoom.example.com/j/123' },
+        ],
+      },
+    });
+    expect(e).toEqual({ url: 'https://zoom.example.com/j/123', name: 'Zoom Meeting' });
+  });
+
+  it('calls a Meet entry point "Google Meet" and an unnamed other one "Video call"', () => {
+    expect(conf({ conferenceData: { entryPoints: [{ entryPointType: 'video', uri: 'https://meet.google.com/xyz-abcd-efg' }] } })?.name).toBe('Google Meet');
+    expect(conf({ conferenceData: { entryPoints: [{ entryPointType: 'video', uri: 'https://calls.example.com/r/1' }] } })?.name).toBe('Video call');
+  });
+
+  it('never exposes a link that is not https', () => {
+    expect(conf({ hangoutLink: 'javascript:alert(1)' })).toBeNull();
+    expect(conf({ hangoutLink: 'http://meet.example.com/x' })).toBeNull();
+    expect(conf({ hangoutLink: 'not a url' })).toBeNull();
+    expect(conf({ conferenceData: { entryPoints: [{ entryPointType: 'video', uri: 'data:text/html,hi' }] } })).toBeNull();
   });
 });
 

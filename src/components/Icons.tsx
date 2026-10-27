@@ -1,4 +1,4 @@
-export type IconName = 'clock' | 'pin' | 'calendar' | 'users' | 'repeat' | 'external' | 'x' | 'plus' | 'search' | 'left' | 'right';
+export type IconName = 'clock' | 'pin' | 'calendar' | 'users' | 'repeat' | 'external' | 'x' | 'plus' | 'search' | 'left' | 'right' | 'video';
 
 const PATHS: Record<IconName, React.ReactNode> = {
   clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
@@ -9,6 +9,7 @@ const PATHS: Record<IconName, React.ReactNode> = {
   external: <><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" /></>,
   x: <path d="M18 6L6 18M6 6l12 12" />,
   plus: <path d="M12 5v14M5 12h14" />,
+  video: <><rect x="2" y="6" width="14" height="12" rx="2" /><path d="M22 8l-6 4 6 4z" /></>,
   left: <path d="M15 18l-6-6 6-6" />,
   right: <path d="M9 18l6-6-6-6" />,
   search: <><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></>,
