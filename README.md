@@ -14,6 +14,8 @@ rich-text (HTML) descriptions, and see and add guests. Runs on your own computer
   rich-text editor (bold, italic, underline, headings, lists, links, tables).
 - **Guests.** See who is invited and how they replied. Where you are allowed to invite, add more guests by email, with an
   option to send invitation emails.
+- **Search.** Press `/` (or Cmd/Ctrl+K) to search the calendars you have ticked, from a year back to a year ahead. It matches
+  titles, descriptions, locations and guests. Upcoming events come first. Pick a result to jump to its date and open it.
 - **Hover preview** of the full title, location and description. Esc closes dialogs.
 - **Day and night themes.** Follows your system setting, and remembers your choice.
 
@@ -127,6 +129,8 @@ It runs Node directly by full path, because background services do not load nvm.
 - It starts when you log in, not at power-on, and pauses while the Mac sleeps.
 - Use `kickstart` or `bootout` to restart or stop it. A plain `kill` can leave the process half stopped, and launchd then
   does not restart it.
+- A build replaces the files the running server uses, so run `kickstart` straight after every `npm run build`. Until then
+  the page can fail to load some of its scripts.
 - If you upgrade Node with nvm, update the Node path in the file.
 
 ## Troubleshooting

@@ -63,6 +63,23 @@ button.icon { border: none; padding: 0 4px; background: none; color: var(--muted
 
 .main { padding: 16px; display: flex; flex-direction: column; gap: 8px; min-width: 0; height: 100vh; }
 .calendar { flex: 1; min-height: 0; }
+.topbar { display: flex; }
+.search { position: relative; flex: 1; max-width: 560px; }
+.search input { width: 100%; padding: 8px 34px; font: inherit; color: var(--fg); background: var(--surface-2); border: 1px solid var(--border-soft); border-radius: 10px; }
+.search input:focus { outline: 2px solid var(--primary); outline-offset: -1px; background: var(--bg); }
+.search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--muted); display: flex; pointer-events: none; }
+.search-clear { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); padding: 4px 6px; border-radius: 6px; }
+.search-results { position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 30; max-height: min(60vh, 520px); overflow-y: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 16px 40px rgb(0 0 0 / 0.3); padding: 6px; }
+.search-list { list-style: none; margin: 0; padding: 0; }
+.search-list.loading { opacity: 0.55; }
+.search-item { display: flex; align-items: flex-start; gap: 10px; width: 100%; padding: 8px 10px; border: none; border-radius: 8px; background: none; text-align: left; }
+.search-item.active { background: var(--range-bg); }
+.search-dot { flex: none; width: 10px; height: 10px; margin-top: 5px; border-radius: 50%; }
+.search-main { display: flex; flex-direction: column; min-width: 0; }
+.search-title { font-size: 14px; overflow-wrap: anywhere; }
+.search-title mark { background: none; color: inherit; font-weight: 700; text-decoration: underline; text-decoration-color: var(--primary); text-underline-offset: 2px; }
+.search-meta { font-size: 12px; }
+.search-note { margin: 0; padding: 8px 10px; font-size: 13px; }
 .warning { background: var(--warn-bg); border: 1px solid var(--warn-border); padding: 8px 12px; border-radius: 6px; font-size: 14px; }
 
 .overlay { position: fixed; inset: 0; background: var(--overlay); backdrop-filter: blur(3px); display: grid; place-items: center; z-index: 50; }

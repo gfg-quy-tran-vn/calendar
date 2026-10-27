@@ -10,11 +10,12 @@ import type { CalendarError, EventsResponse } from '@/lib/aggregate';
 import { withAlpha } from '@/lib/colors';
 import { addDays, localTimeZone } from '@/lib/dates';
 import { hideDomain } from '@/lib/names';
-import type { EventDraft, EventMeta } from '@/lib/events';
+import type { CalendarEvent, EventDraft, EventMeta } from '@/lib/events';
 import { updateEvent } from './api';
 import { EventDialog, type DialogState, type WritableCalendar } from './EventDialog';
 import { EventHoverCard, type HoverState } from './EventHoverCard';
 import { MiniCalendar } from './MiniCalendar';
+import { SearchBar } from './SearchBar';
 import { Sidebar, type AccountView } from './Sidebar';
 
 const HOUR = 3_600_000;
@@ -35,6 +36,8 @@ export function CalendarApp() {
   const [hover, setHover] = useState<HoverState | null>(null);
   const [period, setPeriod] = useState<{ start: Date; end: Date } | null>(null);
   const hoverTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  // A search result chosen from another period: opened as soon as its events have loaded.
+  const pendingOpen = useRef<{ id: string; timer: ReturnType<typeof setTimeout> } | null>(null);
 
   const loadAccounts = useCallback(async () => {
     const res = await fetch('/api/accounts');
@@ -126,6 +129,31 @@ export function CalendarApp() {
     hoverTimer.current = setTimeout(() => setHover({ event, rect: el.getBoundingClientRect() }), HOVER_DELAY_MS);
   }
 
+  function openFromSearch(result: CalendarEvent) {
+    const api = calendarRef.current?.getApi();
+    if (!api) return;
+    hideHover();
+    if (pendingOpen.current) clearTimeout(pendingOpen.current.timer);
+    pendingOpen.current = null;
+    const loaded = api.getEventById(result.id);
+    api.gotoDate(result.start);
+    if (loaded) {
+      setDialog({ mode: 'view', event: loaded });
+      return;
+    }
+    const timer = setTimeout(() => (pendingOpen.current = null), 10_000); // give up if it never appears
+    pendingOpen.current = { id: result.id, timer };
+  }
+
+  function onEventsSet() {
+    const pending = pendingOpen.current;
+    const event = pending && calendarRef.current?.getApi().getEventById(pending.id);
+    if (!pending || !event) return;
+    clearTimeout(pending.timer);
+    pendingOpen.current = null;
+    setDialog({ mode: 'view', event });
+  }
+
   function onEventClick(info: EventClickArg) {
     info.jsEvent.preventDefault();
     hideHover();
@@ -151,6 +179,9 @@ export function CalendarApp() {
         />
       </Sidebar>
       <main className="main">
+        <div className="topbar">
+          <SearchBar onPick={openFromSearch} />
+        </div>
         {warnings.length > 0 && <div className="warning">Could not load: {warnings.map((w) => w.name).join(', ')}</div>}
         {accounts.length === 0 && <p className="muted">No accounts yet — use “+ Add Google account” to connect one.</p>}
         <div className="calendar">
@@ -169,6 +200,7 @@ export function CalendarApp() {
             events={fetchEvents}
             select={onSelect}
             datesSet={onDatesSet}
+            eventsSet={onEventsSet}
             eventClick={onEventClick}
             eventDidMount={(info) => info.el.style.setProperty('--event-solid', info.event.borderColor)}
             eventMouseEnter={onEventMouseEnter}
