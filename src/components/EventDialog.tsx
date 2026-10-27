@@ -9,6 +9,7 @@ import { toDisplayHtml } from '@/lib/sanitize';
 import { createEvent, deleteEvent, updateEvent } from './api';
 import { GuestList } from './GuestList';
 import { HtmlView } from './HtmlView';
+import { Icon } from './Icons';
 import { RichTextEditor } from './RichTextEditor';
 
 export type WritableCalendar = { id: number; label: string };
@@ -80,11 +81,21 @@ function validate(f: Form): string | null {
   return null;
 }
 
-function formatWhen(e: EventApi): string {
-  const fmt = new Intl.DateTimeFormat(undefined, e.allDay ? { dateStyle: 'medium' } : { dateStyle: 'medium', timeStyle: 'short' });
+const sameDay = (a: Date, b: Date) => a.toDateString() === b.toDateString();
+
+/** The date on the first line and the time on the second, e.g. "Monday, October 26, 2026" / "3:00 – 3:30 PM". */
+function whenLines(e: EventApi): { primary: string; secondary?: string } {
   const start = e.start!;
-  const end = e.end && e.allDay ? new Date(e.end.getTime() - DAY) : e.end;
-  return end ? fmt.formatRange(start, end) : fmt.format(start);
+  const longDate = new Intl.DateTimeFormat(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  if (e.allDay) {
+    const last = e.end ? new Date(e.end.getTime() - DAY) : start;
+    const range = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' });
+    return { primary: sameDay(start, last) ? longDate.format(start) : range.formatRange(start, last), secondary: 'All day' };
+  }
+  const end = e.end ?? start;
+  const time = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' });
+  if (sameDay(start, end)) return { primary: longDate.format(start), secondary: end === start ? time.format(start) : time.formatRange(start, end) };
+  return { primary: new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).formatRange(start, end) };
 }
 
 export function EventDialog({ state, calendars, onClose, onChanged }: Props) {
@@ -167,9 +178,13 @@ export function EventDialog({ state, calendars, onClose, onChanged }: Props) {
     void run(() => deleteEvent(meta.calendarId, series ? meta.recurringEventId! : meta.googleEventId));
   }
 
+  const viewing = !editing && state.mode === 'view';
+  const when = viewing ? whenLines(state.event) : null;
+
   return (
     <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && !busy && onClose()}>
-      <div className="dialog" role="dialog" aria-modal="true">
+      <div className={viewing ? 'dialog dialog-view' : 'dialog'} role="dialog" aria-modal="true"
+        style={viewing ? ({ '--event-color': state.event.borderColor } as React.CSSProperties) : undefined}>
         {editing ? (
           <>
             <input className="title-input" type="text" placeholder="Title" value={form.title} autoFocus
@@ -210,12 +225,26 @@ export function EventDialog({ state, calendars, onClose, onChanged }: Props) {
         ) : (
           state.mode === 'view' && meta && (
             <>
-              <h2>{state.event.title}</h2>
-              <p className="muted">{formatWhen(state.event)} · {hideDomain(meta.calendarName)}</p>
-              {meta.location && <p>📍 {meta.location}</p>}
-              <HtmlView html={meta.description} />
+              <header className="dlg-head">
+                <h2>{state.event.title}</h2>
+                <button className="icon dlg-close" onClick={onClose} aria-label="Close" title="Close (Esc)"><Icon name="x" /></button>
+              </header>
+              <ul className="dlg-meta">
+                <li>
+                  <Icon name="clock" />
+                  <span>{when?.primary}{when?.secondary && <span className="muted dlg-sub">{when.secondary}</span>}</span>
+                </li>
+                {recurring && <li><Icon name="repeat" /><span className="muted">Recurring event</span></li>}
+                {meta.location && <li><Icon name="pin" /><span>{meta.location}</span></li>}
+                <li>
+                  <Icon name="calendar" />
+                  <span className="dlg-cal"><span className="cal-dot" />{hideDomain(meta.calendarName)}</span>
+                </li>
+              </ul>
+              {meta.description.trim() && (
+                <div className="dlg-section"><HtmlView html={meta.description} /></div>
+              )}
               <GuestList guests={guests} canAdd={meta.canAddGuests} recurring={recurring} onAdd={addGuests} />
-              {meta.htmlLink && <a href={meta.htmlLink} target="_blank" rel="noopener noreferrer">Open in Google Calendar</a>}
             </>
           )
         )}
@@ -235,9 +264,14 @@ export function EventDialog({ state, calendars, onClose, onChanged }: Props) {
         {error && <p className="error">{error}</p>}
 
         <div className="actions">
-          {meta?.canWrite && <button className="danger" onClick={remove} disabled={busy}>Delete</button>}
+          {meta?.canWrite && <button className="danger ghost" onClick={remove} disabled={busy}>Delete</button>}
           <span className="spacer" />
-          <button onClick={onClose} disabled={busy}>{editing ? 'Cancel' : 'Close'}</button>
+          {viewing && meta?.htmlLink && (
+            <a className="ext-link" href={meta.htmlLink} target="_blank" rel="noopener noreferrer">
+              Open in Google Calendar <Icon name="external" size={13} />
+            </a>
+          )}
+          {editing && <button onClick={onClose} disabled={busy}>Cancel</button>}
           {editing ? (
             <button className="primary" onClick={save} disabled={busy}>{busy ? 'Saving…' : 'Save'}</button>
           ) : (
