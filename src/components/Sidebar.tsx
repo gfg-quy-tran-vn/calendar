@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { removeAccount, setCalendarColor, setCalendarShown } from './api';
+import { ThemeToggle } from './ThemeToggle';
 
 export type CalendarView = {
   id: number; name: string; color: string; colorOverride: string | null; shown: boolean; canWrite: boolean;
@@ -42,7 +43,10 @@ export function Sidebar({ accounts, onChange }: Props) {
 
   return (
     <aside className="sidebar">
-      <h1>Calendars</h1>
+      <div className="sidebar-head">
+        <h1>Calendars</h1>
+        <ThemeToggle />
+      </div>
       {accounts.map((a) => (
         <section key={a.id} className="account">
           <div className="account-head">
