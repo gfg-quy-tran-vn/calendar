@@ -5,7 +5,7 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin, { type EventResizeDoneArg } from '@fullcalendar/interaction';
-import type { DateSelectArg, EventApi, EventClickArg, EventDropArg, EventHoveringArg, EventInput, EventSourceFuncArg } from '@fullcalendar/core';
+import type { DateSelectArg, DatesSetArg, EventApi, EventClickArg, EventDropArg, EventHoveringArg, EventInput, EventSourceFuncArg } from '@fullcalendar/core';
 import type { CalendarError, EventsResponse } from '@/lib/aggregate';
 import { addDays, localTimeZone } from '@/lib/dates';
 import { hideDomain } from '@/lib/names';
@@ -13,6 +13,7 @@ import type { EventDraft, EventMeta } from '@/lib/events';
 import { updateEvent } from './api';
 import { EventDialog, type DialogState, type WritableCalendar } from './EventDialog';
 import { EventHoverCard, type HoverState } from './EventHoverCard';
+import { MiniCalendar } from './MiniCalendar';
 import { Sidebar, type AccountView } from './Sidebar';
 
 const HOUR = 3_600_000;
@@ -29,6 +30,7 @@ export function CalendarApp() {
   const [warnings, setWarnings] = useState<CalendarError[]>([]);
   const [dialog, setDialog] = useState<DialogState | null>(null);
   const [hover, setHover] = useState<HoverState | null>(null);
+  const [period, setPeriod] = useState<{ start: Date; end: Date } | null>(null);
   const hoverTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const loadAccounts = useCallback(async () => {
@@ -83,6 +85,9 @@ export function CalendarApp() {
     [accounts],
   );
 
+  // The middle of the visible period decides which month the mini calendar shows (a week can straddle two).
+  const focus = period ? new Date((period.start.getTime() + period.end.getTime()) / 2) : new Date();
+
   async function onTimeChange(info: EventDropArg | EventResizeDoneArg) {
     const meta = info.event.extendedProps as EventMeta;
     try {
@@ -101,6 +106,10 @@ export function CalendarApp() {
       return;
     }
     setDialog({ mode: 'create', start: info.startStr, end: info.endStr, allDay: info.allDay });
+  }
+
+  function onDatesSet(info: DatesSetArg) {
+    setPeriod({ start: info.view.currentStart, end: info.view.currentEnd });
   }
 
   function hideHover() {
@@ -128,7 +137,16 @@ export function CalendarApp() {
           void loadAccounts();
           refetch();
         }}
-      />
+      >
+        <MiniCalendar
+          // Follow the main calendar to another month, but not when only the day or week changes within one.
+          key={focus.getFullYear() * 12 + focus.getMonth()}
+          initialMonth={focus}
+          rangeStart={period?.start ?? null}
+          rangeEnd={period?.end ?? null}
+          onPick={(date) => calendarRef.current?.getApi().gotoDate(date)}
+        />
+      </Sidebar>
       <main className="main">
         {warnings.length > 0 && <div className="warning">Could not load: {warnings.map((w) => w.name).join(', ')}</div>}
         {accounts.length === 0 && <p className="muted">No accounts yet — use “+ Add Google account” to connect one.</p>}
@@ -145,6 +163,7 @@ export function CalendarApp() {
             selectMirror
             events={fetchEvents}
             select={onSelect}
+            datesSet={onDatesSet}
             eventClick={onEventClick}
             eventMouseEnter={onEventMouseEnter}
             eventMouseLeave={hideHover}

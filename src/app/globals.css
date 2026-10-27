@@ -3,6 +3,7 @@
   --bg: #fff; --fg: #1f2937; --muted: #6b7280; --border: #d1d5db; --border-soft: #e5e7eb;
   --surface: #fff; --surface-2: #f3f4f6; --link: #2563eb; --primary: #2563eb;
   --danger: #b91c1c; --danger-border: #fca5a5; --warn-bg: #fef3c7; --warn-border: #f59e0b; --overlay: rgb(0 0 0 / 0.35);
+  --range-bg: rgb(37 99 235 / 0.16);
   --fc-today-bg-color: rgb(37 99 235 / 0.07);
 }
 [data-theme='dark'] {
@@ -10,6 +11,7 @@
   --bg: #0f172a; --fg: #e2e8f0; --muted: #94a3b8; --border: #334155; --border-soft: #1e293b;
   --surface: #1e293b; --surface-2: #162033; --link: #60a5fa; --primary: #2563eb;
   --danger: #f87171; --danger-border: #7f1d1d; --warn-bg: #422006; --warn-border: #b45309; --overlay: rgb(0 0 0 / 0.6);
+  --range-bg: rgb(96 165 250 / 0.22);
   --fc-today-bg-color: rgb(96 165 250 / 0.12);
 }
 .fc {
@@ -33,6 +35,16 @@ button.icon { border: none; padding: 0 4px; background: none; color: var(--muted
 .sidebar-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .sidebar h1 { font-size: 18px; margin: 0; }
 .theme-toggle { font-size: 16px; }
+.mini-cal { margin-bottom: 16px; }
+.mini-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 13px; font-weight: 600; }
+.mini-head button { font-size: 18px; line-height: 1; padding: 0 8px; }
+.mini-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
+.mini-weekday { font-size: 11px; color: var(--muted); padding: 2px 0; }
+.mini-day { padding: 0; height: 28px; border: none; border-radius: 6px; background: none; font-size: 12px; }
+.mini-day:hover { background: var(--border-soft); }
+.mini-day.outside { color: var(--muted); }
+.mini-day.in-range { background: var(--range-bg); }
+.mini-day.today { background: var(--primary); color: #fff; font-weight: 600; }
 .account { margin-bottom: 16px; }
 .account-head { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 13px; }
 .account-head span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

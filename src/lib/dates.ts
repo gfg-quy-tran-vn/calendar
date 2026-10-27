@@ -20,3 +20,9 @@ export function fromLocalInput(value: string): string {
 export function localTimeZone(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone;
 }
+
+/** The 42 days (six Sunday-first weeks, local midnights) that fill a month grid; `month` is 0–11. */
+export function monthGrid(year: number, month: number): Date[] {
+  const first = new Date(year, month, 1);
+  return Array.from({ length: 42 }, (_, i) => new Date(year, month, 1 - first.getDay() + i));
+}

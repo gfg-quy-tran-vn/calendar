@@ -10,7 +10,7 @@ export type CalendarView = {
 };
 export type AccountView = { id: number; email: string; needsReauth: boolean; calendars: CalendarView[] };
 
-type Props = { accounts: AccountView[]; onChange: () => void };
+type Props = { accounts: AccountView[]; onChange: () => void; children?: React.ReactNode };
 
 // React's onChange fires on every drag inside the picker; the native `change` fires once, when the picker closes.
 function ColorInput({ value, onCommit }: { value: string; onCommit: (color: string) => void }) {
@@ -25,7 +25,7 @@ function ColorInput({ value, onCommit }: { value: string; onCommit: (color: stri
   return <input ref={ref} key={value} type="color" className="swatch" defaultValue={value} title="Change color" />;
 }
 
-export function Sidebar({ accounts, onChange }: Props) {
+export function Sidebar({ accounts, onChange, children }: Props) {
   async function toggle(c: CalendarView) {
     await setCalendarShown(c.id, !c.shown);
     onChange();
@@ -48,6 +48,7 @@ export function Sidebar({ accounts, onChange }: Props) {
         <h1>Calendars</h1>
         <ThemeToggle />
       </div>
+      {children}
       {accounts.map((a) => (
         <section key={a.id} className="account">
           <div className="account-head">
