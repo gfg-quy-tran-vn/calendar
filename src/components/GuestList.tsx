@@ -31,6 +31,7 @@ function avatarColor(email: string): string {
 function GuestRow({ guest }: { guest: Guest }) {
   const status = statusOf(guest);
   const name = guest.displayName || guest.email;
+  const note = guest.comment?.trim();
   return (
     <li className="guest" title={`${name}: ${status.label}`}>
       <span className="avatar" style={{ background: avatarColor(guest.email) }} aria-hidden="true">
@@ -46,7 +47,12 @@ function GuestRow({ guest }: { guest: Guest }) {
           {guest.resource && <span className="guest-tag">Room</span>}
           <span className="sr-only">{status.label}</span>
         </span>
-        {guest.displayName && <span className="muted guest-email">{guest.email}</span>}
+        {(guest.displayName || note) && (
+          <span className="guest-sub">
+            {guest.displayName && <span className="muted guest-email">{guest.email}</span>}
+            {note && <span className="guest-note" title={note}>“{note}”</span>}
+          </span>
+        )}
       </span>
     </li>
   );

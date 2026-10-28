@@ -159,10 +159,13 @@ button.danger.ghost { color: var(--danger); margin-left: -12px; }
 .avatar-badge.accepted { background: #16a34a; }
 .avatar-badge.declined { background: #dc2626; }
 .avatar-badge.tentative { background: #d97706; }
-.guest-text { display: flex; flex-direction: column; min-width: 0; }
+.guest-text { display: flex; flex-direction: column; flex: 1; min-width: 0; }
 .guest-line { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
 .guest-name { overflow-wrap: anywhere; }
 .guest-email { font-size: 12px; overflow-wrap: anywhere; }
+.guest-sub { display: flex; align-items: baseline; gap: 6px; min-width: 0; font-size: 12px; }
+.guest-sub .guest-email { flex: 0 1 auto; max-width: 60%; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; overflow-wrap: normal; }
+.guest-note { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-style: italic; cursor: help; }
 .guest-tag { padding: 0 7px; border: 1px solid var(--border); border-radius: 999px; font-size: 11px; line-height: 17px; color: var(--muted); }
 .add-guests-btn { align-self: flex-start; margin-left: -10px; display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; font-size: 13px; color: var(--link); }
 .guest-add { display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
