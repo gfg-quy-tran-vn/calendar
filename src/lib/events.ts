@@ -11,6 +11,7 @@ export type Guest = {
   self?: boolean;
   optional?: boolean;
   resource?: boolean; // a room or other resource
+  comment?: string; // the guest's note with their reply
 };
 
 /** A video call attached to an event (Google Meet, Zoom, ...). */
@@ -31,6 +32,8 @@ export type EventMeta = {
   attendees: Guest[];
   /** Whether the user may add guests here (the server still has the last word). */
   canAddGuests: boolean;
+  /** Whether the user is an invited guest who can accept, decline or answer maybe. */
+  canRespond: boolean;
   conference: Conference | null;
 };
 
@@ -72,6 +75,7 @@ function toGuest(a: calendar_v3.Schema$EventAttendee): Guest | null {
     ...(a.self ? { self: true } : {}),
     ...(a.optional ? { optional: true } : {}),
     ...(a.resource ? { resource: true } : {}),
+    ...(a.comment ? { comment: a.comment } : {}),
   };
 }
 
@@ -90,6 +94,13 @@ function toConference(ev: calendar_v3.Schema$Event): Conference | null {
   if (!url || !isHttps(url)) return null;
   const isMeet = new URL(url).hostname === 'meet.google.com';
   return { url, name: isMeet ? 'Google Meet' : ev.conferenceData?.conferenceSolution?.name || 'Video call' };
+}
+
+/** Invited guests (not the organizer) can reply. Needs the full guest list, which Google leaves out for very large events. */
+function canRespond(ev: calendar_v3.Schema$Event, cal: CalendarRow): boolean {
+  if (!cal.canWrite || ev.status === 'cancelled' || ev.attendeesOmitted) return false;
+  if (ev.eventType != null && ev.eventType !== 'default') return false;
+  return (ev.attendees ?? []).some((a) => a.self && !a.organizer && !a.resource);
 }
 
 /** Organizers can always add guests; guests only if the organizer allows inviting or modifying (inviting is on by default). */
@@ -124,6 +135,7 @@ export function toCalendarEvent(ev: calendar_v3.Schema$Event, cal: CalendarRow):
       htmlLink: ev.htmlLink ?? '',
       attendees: (ev.attendees ?? []).flatMap((a) => toGuest(a) ?? []),
       canAddGuests: canAddGuests(ev, cal),
+      canRespond: canRespond(ev, cal),
       conference: toConference(ev),
     },
   };
@@ -150,12 +162,13 @@ export function toGooglePatch(d: Partial<EventDraft>): calendar_v3.Schema$Event 
   }
   if (d.attendees !== undefined) {
     // Only what Google lets us write; `self` and `organizer` are its own bookkeeping.
-    body.attendees = d.attendees.map(({ email, displayName, responseStatus, optional, resource }) => ({
+    body.attendees = d.attendees.map(({ email, displayName, responseStatus, optional, resource, comment }) => ({
       email,
       ...(displayName ? { displayName } : {}),
       ...(responseStatus ? { responseStatus } : {}),
       ...(optional ? { optional } : {}),
       ...(resource ? { resource } : {}),
+      ...(comment ? { comment } : {}),
     }));
   }
   return body;

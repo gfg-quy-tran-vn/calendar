@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseEmails } from '@/lib/guests';
+import { applyResponse, parseEmails } from '@/lib/guests';
 
 describe('parseEmails', () => {
   it('splits on commas, semicolons, spaces and new lines', () => {
@@ -36,5 +36,35 @@ describe('parseEmails', () => {
 
   it('returns nothing for empty input', () => {
     expect(parseEmails('  ,; \n', [])).toEqual({ valid: [], invalid: [], existing: [] });
+  });
+});
+
+describe('applyResponse', () => {
+  const guests = [
+    { email: 'boss@example.com', organizer: true, responseStatus: 'accepted' },
+    { email: 'me@example.com', self: true, responseStatus: 'needsAction', displayName: 'Me' },
+    { email: 'pat@example.com', responseStatus: 'declined' },
+  ];
+
+  it('changes only my own entry', () => {
+    expect(applyResponse(guests, 'tentative', 'Running late')).toEqual([
+      guests[0],
+      { email: 'me@example.com', self: true, responseStatus: 'tentative', displayName: 'Me', comment: 'Running late' },
+      guests[2],
+    ]);
+  });
+
+  it('trims the note, and removes it when it is empty', () => {
+    expect(applyResponse(guests, 'accepted', '  See you there  ')[1].comment).toBe('See you there');
+    const withNote = [guests[0], { ...guests[1], comment: 'old note' }, guests[2]];
+    expect(applyResponse(withNote, 'declined', '   ')[1]).not.toHaveProperty('comment');
+  });
+
+  it('does not modify the list it is given, and ignores a list without me in it', () => {
+    const before = JSON.stringify(guests);
+    applyResponse(guests, 'accepted', 'x');
+    expect(JSON.stringify(guests)).toBe(before);
+    const others = [guests[0], guests[2]];
+    expect(applyResponse(others, 'accepted', 'x')).toEqual(others);
   });
 });

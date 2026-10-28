@@ -8,10 +8,13 @@ import { defaultCalendarId } from '@/lib/calendars';
 import { hideDomain } from '@/lib/names';
 import { toDisplayHtml } from '@/lib/sanitize';
 import { createEvent, deleteEvent, updateEvent } from './api';
+import type { Guest } from '@/lib/events';
+import { applyResponse, type Reply } from '@/lib/guests';
 import { GuestList } from './GuestList';
 import { HtmlView } from './HtmlView';
 import { Icon } from './Icons';
 import { RichTextEditor } from './RichTextEditor';
+import { RsvpCard } from './RsvpCard';
 
 export type WritableCalendar = { id: number; label: string; shown: boolean };
 export type DialogState =
@@ -175,16 +178,17 @@ export function EventDialog({ state, calendars, onClose, onChanged }: Props) {
     }
   }
 
-  async function addGuests(emails: string[], notify: boolean) {
+  /** Save the whole guest list (Google replaces it) and keep the open event current, so a second change does not trip over the old etag. */
+  async function saveGuests(attendees: Guest[], notify: boolean) {
     if (state.mode !== 'view' || !meta) return;
-    const updated = await updateEvent(
-      meta.calendarId, meta.googleEventId, { attendees: [...guests, ...emails.map((email) => ({ email }))] }, meta.etag, notify ? 'all' : 'none',
-    );
-    // Keep the open event current, so a second change doesn't trip over the old etag.
+    const updated = await updateEvent(meta.calendarId, meta.googleEventId, { attendees }, meta.etag, notify ? 'all' : 'none');
     state.event.setExtendedProp('etag', updated.extendedProps.etag);
     state.event.setExtendedProp('attendees', updated.extendedProps.attendees);
     setGuests(updated.extendedProps.attendees);
   }
+
+  const addGuests = (emails: string[], notify: boolean) => saveGuests([...guests, ...emails.map((email) => ({ email }))], notify);
+  const reply = (status: Reply, note: string, notify: boolean) => saveGuests(applyResponse(guests, status, note), notify);
 
   function remove() {
     if (!meta) return;
@@ -277,6 +281,9 @@ export function EventDialog({ state, calendars, onClose, onChanged }: Props) {
                   <span className="dlg-cal"><span className="cal-dot" />{hideDomain(meta.calendarName)}</span>
                 </li>
               </ul>
+              {meta.canRespond && guests.find((g) => g.self) && (
+                <RsvpCard me={guests.find((g) => g.self)!} recurring={recurring} onSend={reply} />
+              )}
               {meta.description.trim() && (
                 <div className="dlg-section"><HtmlView html={meta.description} /></div>
               )}

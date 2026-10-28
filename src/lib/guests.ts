@@ -1,3 +1,5 @@
+import type { Guest } from './events';
+
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export type ParsedEmails = {
@@ -29,4 +31,18 @@ export function parseEmails(text: string, alreadyInvited: string[]): ParsedEmail
     result.valid.push(piece);
   }
   return result;
+}
+
+export type Reply = 'accepted' | 'declined' | 'tentative';
+
+/** The guest list with my own entry set to `status` and `note`. Everyone else's entry is left exactly as it was. */
+export function applyResponse(guests: Guest[], status: Reply, note: string): Guest[] {
+  const comment = note.trim();
+  return guests.map((g) => {
+    if (!g.self) return g;
+    const updated: Guest = { ...g, responseStatus: status };
+    if (comment) updated.comment = comment;
+    else delete updated.comment;
+    return updated;
+  });
 }

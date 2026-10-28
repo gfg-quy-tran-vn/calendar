@@ -224,6 +224,7 @@ export function CalendarApp() {
             datesSet={onDatesSet}
             eventsSet={onEventsSet}
             eventClick={onEventClick}
+            eventClassNames={(arg) => ((arg.event.extendedProps as EventMeta).attendees?.some((g) => g.self && g.responseStatus === 'declined') ? ['ev-declined'] : [])}
             eventDidMount={(info) => info.el.style.setProperty('--event-solid', info.event.borderColor)}
             eventMouseEnter={onEventMouseEnter}
             eventMouseLeave={hideHover}

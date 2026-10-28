@@ -23,7 +23,7 @@ describe('toCalendarEvent', () => {
       extendedProps: {
         calendarId: 7, accountId: 2, calendarName: 'Work', canWrite: true, googleEventId: 'ev1',
         recurringEventId: 'series1', description: '<b>hi</b>', location: 'Room 1', etag: '"e1"', htmlLink: 'https://g/ev1',
-        attendees: [], canAddGuests: true, conference: null,
+        attendees: [], canAddGuests: true, canRespond: false, conference: null,
       },
     });
   });
@@ -31,6 +31,38 @@ describe('toCalendarEvent', () => {
   it('maps an all-day event keeping Google\'s exclusive end date', () => {
     const e = toCalendarEvent({ id: 'a', start: { date: '2026-10-27' }, end: { date: '2026-10-29' } }, { ...cal, canWrite: false });
     expect(e).toMatchObject({ title: '(No title)', start: '2026-10-27', end: '2026-10-29', allDay: true, editable: false });
+  });
+});
+
+describe('replying to an invitation', () => {
+  const timed = { start: { dateTime: '2026-10-27T10:00:00Z' }, end: { dateTime: '2026-10-27T11:00:00Z' } };
+  const invited = [
+    { email: 'boss@example.com', organizer: true, responseStatus: 'accepted' },
+    { email: 'me@example.com', self: true, responseStatus: 'needsAction' },
+  ];
+  const can = (ev: object, c = cal) => toCalendarEvent({ id: 'r', ...timed, ...ev }, c).extendedProps.canRespond;
+
+  it('lets an invited guest reply', () => {
+    expect(can({ attendees: invited })).toBe(true);
+  });
+
+  it('does not offer a reply to the organizer, to non-guests, or when the guest list is incomplete', () => {
+    expect(can({ attendees: [{ email: 'me@example.com', self: true, organizer: true }] })).toBe(false);
+    expect(can({ attendees: [{ email: 'boss@example.com', organizer: true }] })).toBe(false);
+    expect(can({})).toBe(false);
+    expect(can({ attendees: invited, attendeesOmitted: true })).toBe(false);
+  });
+
+  it('never offers it on read-only calendars or cancelled events', () => {
+    expect(can({ attendees: invited }, { ...cal, canWrite: false })).toBe(false);
+    expect(can({ attendees: invited, status: 'cancelled' })).toBe(false);
+  });
+
+  it('keeps a guest note and sends it back only when there is one', () => {
+    const e = toCalendarEvent({ id: 'r', ...timed, attendees: [{ email: 'me@example.com', self: true, responseStatus: 'tentative', comment: 'Running late' }] }, cal);
+    expect(e.extendedProps.attendees[0]).toMatchObject({ comment: 'Running late' });
+    expect(toGooglePatch({ attendees: [{ email: 'a@example.com', comment: 'Running late' }] }).attendees).toEqual([{ email: 'a@example.com', comment: 'Running late' }]);
+    expect(toGooglePatch({ attendees: [{ email: 'a@example.com', comment: '' }] }).attendees).toEqual([{ email: 'a@example.com' }]);
   });
 });
 
@@ -83,7 +115,7 @@ describe('guests', () => {
         attendees: [
           { email: 'a@example.com', displayName: 'Alex', responseStatus: 'accepted', organizer: true, self: true },
           { email: 'room@example.com', resource: true, responseStatus: 'accepted' },
-          { email: 'b@example.com', optional: true, responseStatus: 'needsAction', comment: 'ignored' },
+          { email: 'b@example.com', optional: true, responseStatus: 'needsAction', additionalGuests: 3 },
           { displayName: 'no email' },
         ],
       },

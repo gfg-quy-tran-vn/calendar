@@ -14,6 +14,8 @@ rich-text (HTML) descriptions, and see and add guests. Runs on your own computer
   rich-text editor (bold, italic, underline, headings, lists, links, tables).
 - **Guests.** See who is invited and how they replied. Where you are allowed to invite, add more guests by email, with an
   option to send invitation emails.
+- **Reply to invitations.** For events you are invited to, answer **Yes / Maybe / No** with an optional note, and choose
+  whether to let the organizer know. Events you declined are faded and struck through on the grid.
 - **Search.** Press `/` (or Cmd/Ctrl+K) to search the calendars you have ticked, from a year back to a year ahead. It matches
   titles, descriptions, locations and guests. Upcoming events come first. Pick a result to jump to its date and open it.
 - **Video calls.** Events with a Google Meet (or Zoom and similar) link show a **Join** button and a **Copy link** button in

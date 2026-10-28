@@ -133,6 +133,21 @@ button.danger.ghost { color: var(--danger); margin-left: -12px; }
 .ext-link:hover { text-decoration: underline; }
 
 /* Guests */
+.rsvp { display: flex; flex-direction: column; gap: 10px; }
+.rsvp-head { display: flex; align-items: baseline; gap: 10px; font-size: 14px; }
+.rsvp-head .muted { font-size: 13px; }
+.rsvp-seg { align-self: flex-start; }
+.rsvp-seg button { min-width: 72px; }
+.rsvp-seg button.active.accepted { background: #16a34a; }
+.rsvp-seg button.active.tentative { background: #d97706; }
+.rsvp-seg button.active.declined { background: #dc2626; }
+.rsvp-note { width: 100%; padding: 8px 10px; font: inherit; font-size: 13px; color: var(--fg); background: var(--bg); border: 1px solid var(--border); border-radius: 8px; resize: vertical; }
+.rsvp-note:focus { outline: 2px solid var(--primary); outline-offset: -1px; }
+.rsvp-actions { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.rsvp-sent { color: #16a34a; font-weight: 600; }
+.rsvp-hint { font-size: 12px; }
+.fc .ev-declined { opacity: 0.5; }
+.fc .ev-declined .fc-event-title, .fc .ev-declined .fc-event-time { text-decoration: line-through; }
 .guests { display: flex; flex-direction: column; gap: 10px; }
 .guests-head { display: flex; align-items: center; gap: 8px; font-size: 14px; }
 .guests-head .icon-svg { color: var(--muted); }
