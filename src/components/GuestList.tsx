@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { Guest } from '@/lib/events';
-import { parseEmails } from '@/lib/guests';
+import { parseEmails, sortGuests } from '@/lib/guests';
 import { Icon } from './Icons';
 
 type Props = {
@@ -76,8 +76,7 @@ export function GuestList({ guests, canAdd, recurring, onAdd }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   if (guests.length === 0 && !canAdd) return null;
-  // The organizer first, then everyone else in Google's order.
-  const ordered = [...guests].sort((a, b) => Number(b.organizer ?? false) - Number(a.organizer ?? false));
+  const ordered = sortGuests(guests);
 
   function cancel() {
     setAdding(false);

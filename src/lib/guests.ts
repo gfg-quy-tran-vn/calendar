@@ -46,3 +46,11 @@ export function applyResponse(guests: Guest[], status: Reply, note: string): Gue
     return updated;
   });
 }
+
+const ANSWER_RANK: Record<string, number> = { accepted: 0, tentative: 1, declined: 2 };
+
+/** The organizer first, then yes, maybe, no, and no response. Google's order is kept within each group. */
+export function sortGuests(guests: Guest[]): Guest[] {
+  const rank = (g: Guest) => (g.organizer ? -1 : (ANSWER_RANK[g.responseStatus ?? ''] ?? 3));
+  return [...guests].sort((a, b) => rank(a) - rank(b));
+}

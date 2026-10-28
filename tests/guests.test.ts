@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyResponse, parseEmails } from '@/lib/guests';
+import { applyResponse, parseEmails, sortGuests } from '@/lib/guests';
 
 describe('parseEmails', () => {
   it('splits on commas, semicolons, spaces and new lines', () => {
@@ -66,5 +66,23 @@ describe('applyResponse', () => {
     expect(JSON.stringify(guests)).toBe(before);
     const others = [guests[0], guests[2]];
     expect(applyResponse(others, 'accepted', 'x')).toEqual(others);
+  });
+});
+
+describe('sortGuests', () => {
+  const g = (email: string, responseStatus?: string, organizer?: boolean) => ({ email, responseStatus, organizer });
+
+  it('puts the organizer first, then yes, maybe, no, and no response', () => {
+    const sorted = sortGuests([
+      g('none@x.com'), g('no@x.com', 'declined'), g('maybe@x.com', 'tentative'),
+      g('yes@x.com', 'accepted'), g('org@x.com', 'needsAction', true),
+    ]);
+    expect(sorted.map((x) => x.email)).toEqual(['org@x.com', 'yes@x.com', 'maybe@x.com', 'no@x.com', 'none@x.com']);
+  });
+
+  it('keeps Google\'s order within the same answer and does not change the input', () => {
+    const input = [g('b@x.com', 'accepted'), g('a@x.com', 'accepted'), g('c@x.com', 'bogus')];
+    expect(sortGuests(input).map((x) => x.email)).toEqual(['b@x.com', 'a@x.com', 'c@x.com']);
+    expect(input.map((x) => x.email)).toEqual(['b@x.com', 'a@x.com', 'c@x.com']);
   });
 });
