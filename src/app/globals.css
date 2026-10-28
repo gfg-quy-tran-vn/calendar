@@ -136,11 +136,16 @@ button.danger.ghost { color: var(--danger); margin-left: -12px; }
 .rsvp { display: flex; flex-direction: column; gap: 10px; }
 .rsvp-head { display: flex; align-items: baseline; gap: 10px; font-size: 14px; }
 .rsvp-head .muted { font-size: 13px; }
-.rsvp-seg { align-self: flex-start; }
-.rsvp-seg button { min-width: 72px; }
-.rsvp-seg button.active.accepted { background: #16a34a; }
-.rsvp-seg button.active.tentative { background: #d97706; }
-.rsvp-seg button.active.declined { background: #dc2626; }
+.rsvp-choices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.rsvp-choice { --c: var(--muted); display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 10px; font: inherit; font-size: 14px; font-weight: 500; color: var(--fg); background: transparent; border: 1px solid var(--border); border-radius: 999px; cursor: pointer; }
+.rsvp-choice.accepted { --c: #16a34a; }
+.rsvp-choice.tentative { --c: #d97706; }
+.rsvp-choice.declined { --c: #dc2626; }
+.rsvp-mark { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; font-size: 11px; font-weight: 700; color: var(--c); border: 1.5px solid var(--c); }
+.rsvp-choice:hover:not(:disabled) { border-color: var(--c); background: color-mix(in srgb, var(--c) 10%, transparent); }
+.rsvp-choice.active { border-color: var(--c); background: var(--c); color: #fff; }
+.rsvp-choice.active .rsvp-mark { color: #fff; border-color: #fff; }
+.rsvp-choice:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 .rsvp-note { width: 100%; padding: 8px 10px; font: inherit; font-size: 13px; color: var(--fg); background: var(--bg); border: 1px solid var(--border); border-radius: 8px; resize: vertical; }
 .rsvp-note:focus { outline: 2px solid var(--primary); outline-offset: -1px; }
 .rsvp-actions { display: flex; align-items: center; gap: 10px; font-size: 13px; }

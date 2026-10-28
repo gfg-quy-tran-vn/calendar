@@ -11,10 +11,10 @@ type Props = {
   onSend: (status: Reply, note: string, notify: boolean) => Promise<void>;
 };
 
-const CHOICES: { status: Reply; label: string }[] = [
-  { status: 'accepted', label: 'Yes' },
-  { status: 'tentative', label: 'Maybe' },
-  { status: 'declined', label: 'No' },
+const CHOICES: { status: Reply; label: string; mark: string }[] = [
+  { status: 'accepted', label: 'Yes', mark: '✓' },
+  { status: 'tentative', label: 'Maybe', mark: '?' },
+  { status: 'declined', label: 'No', mark: '✕' },
 ];
 const WORDS: Record<string, string> = { accepted: 'You said yes', declined: 'You said no', tentative: 'You said maybe', needsAction: 'No reply yet' };
 
@@ -51,24 +51,29 @@ export function RsvpCard({ me, recurring, onSend }: Props) {
         <strong>Going?</strong>
         <span className="muted">{WORDS[current] ?? WORDS.needsAction}</span>
       </div>
-      <div className="seg rsvp-seg" role="group" aria-label="Your reply">
+      <div className="rsvp-choices" role="group" aria-label="Your reply">
         {CHOICES.map((c) => (
-          <button key={c.status} className={choice === c.status ? `active ${c.status}` : ''} aria-pressed={choice === c.status}
+          <button key={c.status} className={`rsvp-choice ${c.status}${choice === c.status ? ' active' : ''}`} aria-pressed={choice === c.status}
             onClick={() => { setChoice(c.status); setSent(false); }} disabled={busy}>
+            <span className="rsvp-mark" aria-hidden="true">{c.mark}</span>
             {c.label}
           </button>
         ))}
       </div>
-      <textarea className="rsvp-note" rows={2} value={note} placeholder="Add a note (optional)" aria-label="Note with your reply"
-        onChange={(e) => { setNote(e.target.value); setSent(false); }} disabled={busy} />
-      <div className="rsvp-actions">
-        <label className="inline">
-          <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} disabled={busy} /> Let the organizer know
-        </label>
-        <span className="spacer" />
-        {sent && <span className="rsvp-sent">Reply sent ✓</span>}
-        <button className="primary" onClick={send} disabled={busy || !changed}>{busy ? 'Sending…' : 'Send reply'}</button>
-      </div>
+      {choice && (
+        <>
+          <textarea className="rsvp-note" rows={2} value={note} placeholder="Add a note (optional)" aria-label="Note with your reply"
+            onChange={(e) => { setNote(e.target.value); setSent(false); }} disabled={busy} />
+          <div className="rsvp-actions">
+            <label className="inline">
+              <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} disabled={busy} /> Let the organizer know
+            </label>
+            <span className="spacer" />
+            {sent && <span className="rsvp-sent">Reply sent ✓</span>}
+            <button className="primary" onClick={send} disabled={busy || !changed}>{busy ? 'Sending…' : 'Send reply'}</button>
+          </div>
+        </>
+      )}
       {recurring && <span className="muted rsvp-hint">This replies to this occurrence only.</span>}
       {error && <p className="error">{error}</p>}
     </section>
