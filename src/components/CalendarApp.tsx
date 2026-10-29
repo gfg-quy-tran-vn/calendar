@@ -22,9 +22,9 @@ import { Sidebar, type AccountView } from './Sidebar';
 const HOUR = 3_600_000;
 const HOVER_DELAY_MS = 300;
 const VIEWS = [
-  { type: 'dayGridMonth', label: 'Month' },
-  { type: 'timeGridWeek', label: 'Week' },
-  { type: 'timeGridDay', label: 'Day' },
+  { type: 'dayGridMonth', label: 'M', name: 'Month' },
+  { type: 'timeGridWeek', label: 'W', name: 'Week' },
+  { type: 'timeGridDay', label: 'D', name: 'Day' },
 ] as const;
 // Fill opacity of event boxes: low enough that overlapping events show through each other. The border stays solid.
 const EVENT_FILL_ALPHA = 0.75;
@@ -187,7 +187,6 @@ export function CalendarApp() {
       </Sidebar>
       <main className="main">
         <div className="topbar">
-          <SearchBar onPick={openFromSearch} />
           <nav className="nav" aria-label="Calendar navigation">
             <div className="seg">
               <button onClick={() => calendarRef.current?.getApi().prev()} aria-label="Previous" title="Previous"><Icon name="left" /></button>
@@ -197,12 +196,13 @@ export function CalendarApp() {
             <div className="seg" role="group" aria-label="View">
               {VIEWS.map((v) => (
                 <button key={v.type} className={period?.view === v.type ? 'active' : ''} aria-pressed={period?.view === v.type}
-                  onClick={() => calendarRef.current?.getApi().changeView(v.type)}>
+                  aria-label={v.name} title={v.name} onClick={() => calendarRef.current?.getApi().changeView(v.type)}>
                   {v.label}
                 </button>
               ))}
             </div>
           </nav>
+          <SearchBar onPick={openFromSearch} />
         </div>
         {warnings.length > 0 && <div className="warning">Could not load: {warnings.map((w) => w.name).join(', ')}</div>}
         {accounts.length === 0 && <p className="muted">No accounts yet — use “+ Add Google account” to connect one.</p>}
